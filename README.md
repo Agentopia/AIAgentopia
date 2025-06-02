@@ -31,6 +31,28 @@ AIAgentopia/
 ## 🤝 Contributing
 We welcome contributions from the community! Please open an issue or submit a pull request. See `CONTRIBUTING.md` (to be added) for guidelines.
 
+## Development & Contribution
+
+- See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed contribution guidelines.
+- All agents must include an `agent.json` manifest following the [agent-manifest.schema.json](./agent-manifest.schema.json).
+
+### Agent Manifest Validation (Gatekeeper Script)
+
+To ensure all agents are valid and compatible with the Agentopia portal, run the validation script before submitting changes:
+
+1. **Install dependencies** (only needed once):
+   ```sh
+   npm install ajv
+   ```
+2. **Run the validation script:**
+   ```sh
+   node tools/validate-agents.js
+   ```
+
+- The script will scan all `agent.json` files in `agents/` and check them against the schema.
+- If any manifest is invalid, the script will print errors and exit with a non-zero code (good for CI/CD too).
+- Fix any errors before submitting your PR!
+
 ## 📄 License
 [Specify license here - e.g., MIT, Apache 2.0] _(To be updated)_
 

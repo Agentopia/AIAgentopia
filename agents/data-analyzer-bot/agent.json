@@ -1,0 +1,12 @@
+{
+  "name": "Data Analyzer Bot",
+  "description": "A mockup AI agent for analyzing data.",
+  "category": "Analytics",
+  "type": "regular",
+  "scale": "single",
+  "features": ["Data Analysis", "Summary Generation", "Demo Agent"],
+  "tags": ["analytics", "demo", "data"],
+  "version": "0.1.0",
+  "author": "Agentopia Team",
+  "entry_point": "main.py"
+}

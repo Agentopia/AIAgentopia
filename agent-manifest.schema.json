@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent Manifest Schema",
+  "type": "object",
+  "required": [
+    "name", "description", "category", "type", "scale", "features",
+    "tags", "version", "author", "entry_point"
+  ],
+  "properties": {
+    "name": { "type": "string", "description": "Unique agent name" },
+    "description": { "type": "string", "description": "Short summary of the agent" },
+    "category": {
+      "type": "string",
+      "enum": ["Productivity", "Analytics", "Automation"],
+      "description": "Main category (must match portal filters)"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["regular", "autonomous", "team"],
+      "description": "Agent type (must match portal filters)"
+    },
+    "scale": {
+      "type": "string",
+      "enum": ["single", "multiple"],
+      "description": "Single agent or team"
+    },
+    "features": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "version": { "type": "string", "description": "Agent version" },
+    "author": { "type": "string", "description": "Author or maintainer" },
+    "entry_point": { "type": "string", "description": "Main script/module" },
+    "setup_instructions": { "type": "string", "description": "Markdown or plain text instructions", "default": "" },
+    "requirements": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "config_fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "label", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "label": { "type": "string" },
+          "type": { "type": "string", "enum": ["text", "password", "number", "select"] },
+          "required": { "type": "boolean", "default": false }
+        }
+      },
+      "default": []
+    },
+    "demo_url": { "type": "string", "format": "uri", "default": "" },
+    "source_url": { "type": "string", "format": "uri", "default": "" },
+    "icon": { "type": "string", "default": "" }
+  }
+}
