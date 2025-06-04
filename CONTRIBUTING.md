@@ -25,8 +25,8 @@ We welcome new agents, improvements, and ideas from the community.
    - Example manifest is provided in the schema and below.
 
 3. **Validate Your Manifest**
-   - Use [jsonschemavalidator.net](https://www.jsonschemavalidator.net/) or a similar tool.
-   - Paste your `agent.json` and the [schema file](./agent-manifest.schema.json) to check for errors.
+   - **Primary Method (Recommended):** Use the local validation script: `node tools/validate-agents.js path/to/your/agent/agent.json`. (Note: This script is under development and will be enhanced to perform comprehensive checks beyond basic schema validation.)
+   - **Alternative:** You can also use an online tool like [jsonschemavalidator.net](https://www.jsonschemavalidator.net/) for quick schema checks. Paste your `agent.json` and the [schema file](./agent-manifest.schema.json) to check for basic errors.
 
 4. **Add Your Agent Code**
    - Include the main entry point file (e.g., `main.py`) and any supporting files in your agent’s folder.
@@ -37,6 +37,53 @@ We welcome new agents, improvements, and ideas from the community.
 
 6. **Submit a Pull Request**
    - Push your branch to your fork and open a pull request with a clear description of your changes.
+
+---
+
+## 🌊 Agent Lifecycle & Validation Process
+
+To ensure quality and a smooth integration into Agentopia, agents go through a defined lifecycle managed by the `deployment_status` field in their `agent.json` manifest and a validation process.
+
+### Agent `deployment_status`
+
+This field indicates the current readiness of your agent:
+
+*   `"development"` (Default): Your agent is under active development. It might be incomplete, not fully tested, or documentation might be pending. Use this status while you are actively working on the agent.
+*   `"review"`: You've completed development, thoroughly tested your agent locally, ensured all documentation (especially `long_description`, `docker_run_instructions`, and `privacy_considerations`) is comprehensive, and successfully run the local validation script (`tools/validate-agents.js`). Your agent is now ready for review by project maintainers.
+*   `"production"`: Your agent has been reviewed, approved, and is ready to be listed on the official Agentopia portal. This status is typically set by project maintainers after a successful review.
+
+### Contribution Workflow & Validation
+
+1.  **Develop Your Agent:**
+    *   Create your agent files and `agent.json` manifest as described in "How to Add a New Agent."
+    *   Initially, your `agent.json` should have `"deployment_status": "development"` (or omit it to use the default).
+
+2.  **Local Validation (Crucial Step):**
+    *   Before marking your agent for review, **you must** run the local validation script against your agent's manifest:
+      ```bash
+      node tools/validate-agents.js path/to/your/agent/agent.json
+      ```
+    *   This script will check for schema compliance and perform other sanity checks on critical fields (e.g., ensuring descriptions are not empty, Docker instructions are present, etc.).
+    *   Address all errors and warnings reported by the script.
+
+3.  **Self-Review & Testing:**
+    *   Thoroughly test your agent's functionality, especially the Docker setup as described in `docker_run_instructions`.
+    *   Ensure all user-facing documentation in the manifest (like `long_description`, `setup_instructions`, `docker_run_instructions`, `privacy_considerations`) is clear, accurate, and complete.
+
+4.  **Mark for Review:**
+    *   Once local validation passes and you are confident your agent is ready, update its `agent.json` to `"deployment_status": "review"`.
+
+5.  **Submit Pull Request:**
+    *   Commit your changes, including the updated `agent.json`.
+    *   Push your branch to your fork and open a Pull Request to the `AIAgentopia` repository.
+    *   In your PR description, mention that the agent is ready for review.
+
+6.  **Automated Checks & Maintainer Review:**
+    *   (Future Implementation) Automated checks (e.g., via GitHub Actions) will run `validate-agents.js` on your PR to ensure compliance.
+    *   Project maintainers will review your agent's code, documentation, and functionality.
+    *   If approved, maintainers will merge your PR and may update the status to `"production"`.
+
+By following this process, you help maintain the quality and reliability of agents in Agentopia.
 
 ---
 
