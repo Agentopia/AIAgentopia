@@ -1,0 +1,43 @@
+# pyproject.toml
+
+[tool.ruff]
+# Assume Python 3.9 compatibility. You can change this to your target version.
+target-version = "py39"
+
+# Exclude common directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+# Allow line lengths up to 88 characters (Black's default).
+line-length = 88
+
+[tool.ruff.lint]
+# Enable Pyflakes (F) and pycodestyle (E) error checks by default.
+# Enable isort (I) for import sorting.
+select = ["E", "F", "I"]
+# You can add more specific rule selections or ignores here if needed later.
+
+[tool.ruff.format]
+# Enable formatting. This is compatible with Black.
+# You can specify options like quote_style if needed, e.g.:
+# quote-style = "double"
+# indent-style = "space"

@@ -1,12 +1,11 @@
 # Data Analyzer Bot (Mockup)
 
+
 def analyze(data):
     """Mockup function to analyze data."""
     # In a real agent, you would add data analysis logic here
-    return {
-        "summary": "Data analyzed successfully!",
-        "input": data
-    }
+    return {"summary": "Data analyzed successfully!", "input": data}
+
 
 if __name__ == "__main__":
     # Example usage
