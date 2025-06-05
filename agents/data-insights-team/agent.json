@@ -1,0 +1,80 @@
+{
+  "id": 4,
+  "name": "Data Insights Team",
+  "icon": "👥",
+  "version": "0.1.0",
+  "author": "Agentopia Core Team",
+  "agentType": "Specialized",
+  "agentScale": "Multi-Agent",
+  "category": "Data Analysis & Research",
+  "subcategory": "Collaborative Analytics",
+  "description": "A coordinated team of specialized AI agents that collaboratively analyze complex datasets, generate insights, and produce comprehensive visual reports.",
+  "long_description": "### Overview\nThe Data Insights Team is a multi-agent system designed for tackling complex data analysis challenges. It comprises several specialized agents, each contributing unique skills (e.g., data cleaning, statistical modeling, visualization, natural language reporting). Together, they provide a deeper and more nuanced understanding of your data than a single agent might achieve. This team is ideal for organizations looking to extract actionable intelligence from large or multifaceted datasets.\n\n### Key Features:\n*   **Multi-Agent Collaboration:** Agents coordinate tasks and share intermediate results.\n*   **Specialized Roles:** Includes agents for data ingestion, preprocessing, advanced analytics, visualization, and insight communication.\n*   **Scalable Analysis:** Capable of handling larger and more complex datasets by distributing workloads.\n*   **Comprehensive Reporting:** Generates integrated reports combining statistical findings, visualizations, and narrative explanations.\n*   **Customizable Team Composition (Future):** Adapt the team's skills by adding or configuring individual agents.",
+  "configFields": [
+    {
+      "name": "DATA_SOURCE_CONFIG",
+      "label": "Data Source Configuration (JSON or Path)",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "e.g., {\"type\": \"database\", \"connection_string\": \"...\"} or /path/to/data_config.yaml"
+    },
+    {
+      "name": "ANALYSIS_GOALS",
+      "label": "Primary Analysis Goals/Questions (Comma-separated)",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., Identify sales trends, Predict customer churn"
+    }
+  ],
+  "features": [
+    "Collaborative analysis by a team of specialized AI agents.",
+    "Advanced statistical modeling and machine learning capabilities.",
+    "Generation of interactive dashboards and detailed reports.",
+    "Natural language explanations of complex findings."
+  ],
+  "tags": [
+    "multi-agent",
+    "data analysis",
+    "business intelligence",
+    "machine learning",
+    "data visualization",
+    "team analytics",
+    "collaborative AI"
+  ],
+  "demoUrl": "#",
+  "sourceUrl": "#",
+  "rating": 0,
+  "reviews": 0,
+  "entry_point": "coordinator.py",
+  "deployment_status": "planning",
+  "use_cases": [
+    "In-depth market research and competitive analysis.",
+    "Financial forecasting and risk assessment.",
+    "Scientific research data analysis.",
+    "Customer segmentation and behavior analysis.",
+    "Operational efficiency optimization."
+  ],
+  "requirements": [
+    "python",
+    "pandas",
+    "scikit-learn",
+    "numpy"
+  ],
+  "roadmap_features": [
+    "User interface for defining analysis projects and team configurations.",
+    "Real-time collaboration monitoring.",
+    "Integration with data warehousing solutions.",
+    "Automated insight discovery and hypothesis generation."
+  ],
+  "llm_dependency": {
+    "type": "multiple",
+    "notes": "Individual agents within the team may have their own LLM dependencies for tasks like natural language processing or report generation. Refer to individual agent manifests for details."
+  },
+  "privacy_considerations": "Data handling depends on the configuration of individual agents and data sources. Ensure compliance with data privacy regulations. Secure communication channels between agents are critical if deployed in a distributed environment.",
+  "docker_info": null,
+  "setup_instructions": "### Prerequisites:\n*   Python 3.8+ installed.\n*   Potentially Docker for managing individual agent services.\n\n### Running Locally (Example - Actual setup TBD)\n1.  Clone the main repository containing the team's coordinator and individual agent modules.\n2.  Set up and run each specialized agent (details TBD, might involve individual Docker containers or Python processes).\n3.  Configure the `coordinator.py` with data sources and analysis goals.\n4.  Run the coordinator: `python coordinator.py --config /path/to/project_config.json`.",
+  "developmentFrameworks": ["Python", "Agent Communication Framework (e.g., gRPC, REST)"],
+  "intendedAudience": ["Data Science Teams", "Large Enterprises", "Research Institutions"],
+  "dataModalities": ["Tabular Data", "Text Data", "Time Series Data"],
+  "integrationType": "Distributed System / API-driven"
+}

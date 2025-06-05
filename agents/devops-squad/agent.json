@@ -1,0 +1,93 @@
+{
+  "id": 5,
+  "name": "DevOps Squad",
+  "icon": "🚀",
+  "version": "0.1.0",
+  "author": "Agentopia Core Team",
+  "agentType": "Autonomous",
+  "agentScale": "Multi-Agent",
+  "category": "Automation & Utilities",
+  "subcategory": "CI/CD & Infrastructure",
+  "description": "A self-organizing team of AI agents that automate and manage your software development lifecycle, from code integration to deployment and monitoring.",
+  "long_description": "### Overview\nThe DevOps Squad is a multi-agent system designed to streamline and automate the complexities of modern software development and operations. It includes specialized agents for tasks like code linting, automated testing, build management, deployment orchestration, infrastructure provisioning (IaC), and performance monitoring. This squad aims to improve development velocity, reduce manual errors, and ensure robust and scalable application delivery.\n\n### Key Features:\n*   **Continuous Integration/Continuous Deployment (CI/CD):** Automates build, test, and deployment pipelines.\n*   **Infrastructure as Code (IaC) Management:** Agents can interact with tools like Terraform or CloudFormation.\n*   **Automated Testing & Quality Assurance:** Integrates with testing frameworks to run various test suites.\n*   **Performance Monitoring & Alerting:** Observes application performance and system health, triggering alerts or corrective actions.\n*   **Security Scanning & Compliance (Future):** Incorporate agents for vulnerability scanning and compliance checks.",
+  "configFields": [
+    {
+      "name": "GIT_REPO_URL",
+      "label": "Git Repository URL",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., https://github.com/user/repo.git"
+    },
+    {
+      "name": "DEPLOYMENT_ENVIRONMENT",
+      "label": "Target Deployment Environment",
+      "type": "select",
+      "options": ["development", "staging", "production"],
+      "required": true,
+      "defaultValue": "development"
+    },
+    {
+      "name": "IAC_CONFIG_PATH",
+      "label": "Infrastructure as Code Config Path (Optional)",
+      "type": "text",
+      "required": false,
+      "placeholder": "e.g., infrastructure/terraform/"
+    }
+  ],
+  "features": [
+    "Automated CI/CD pipeline management.",
+    "Infrastructure provisioning and management via IaC.",
+    "Automated software testing and quality checks.",
+    "Real-time application and infrastructure monitoring.",
+    "Self-healing capabilities for common issues (planned)."
+  ],
+  "tags": [
+    "devops",
+    "ci-cd",
+    "automation",
+    "multi-agent",
+    "infrastructure",
+    "deployment",
+    "monitoring",
+    "iac"
+  ],
+  "demoUrl": "#",
+  "sourceUrl": "#",
+  "rating": 0,
+  "reviews": 0,
+  "entry_point": "squad_coordinator.py",
+  "deployment_status": "planning",
+  "use_cases": [
+    "Automating the build and deployment of web applications.",
+    "Managing cloud infrastructure for microservices.",
+    "Implementing automated testing and release processes.",
+    "Monitoring production systems and responding to incidents.",
+    "Streamlining developer workflows."
+  ],
+  "requirements": [
+    "python",
+    "git",
+    "docker"
+  ],
+  "roadmap_features": [
+    "Advanced AI-driven pipeline optimization.",
+    "Integration with various cloud providers and DevOps tools.",
+    "Automated rollback strategies.",
+    "Predictive analysis for potential system failures.",
+    "ChatOps integration for team collaboration."
+  ],
+  "llm_dependency": {
+    "type": "optional",
+    "notes": "LLMs might be used by specific agents for tasks like generating commit messages, summarizing test results, or interpreting monitoring data. Not core to all operations."
+  },
+  "privacy_considerations": "Access to source code repositories, cloud provider credentials, and sensitive infrastructure details is required. Ensure robust security practices, secure credential management, and network security for agent communication.",
+  "docker_info": {
+    "image_name_pattern": "agentopia/devops-squad-agent-<role>:<version>",
+    "notes": "The DevOps Squad will likely consist of multiple Dockerized agent services, each fulfilling a specific role (e.g., builder, tester, deployer)."
+  },
+  "setup_instructions": "### Prerequisites:\n*   Python 3.8+ installed.\n*   Docker & Docker Compose.\n*   Access credentials for Git repositories and cloud providers.\n\n### Running Locally (Example - Actual setup TBD)\n1.  Clone the DevOps Squad repository.\n2.  Configure environment variables for API keys and service endpoints.\n3.  Use Docker Compose to build and run the multi-agent system: `docker-compose up -d`.\n4.  Interact with the squad coordinator via API or CLI to manage pipelines.",
+  "developmentFrameworks": ["Python", "Docker", "Kubernetes (optional)", "CI/CD Tools (e.g., Jenkins, GitLab CI)"],
+  "intendedAudience": ["Development Teams", "Operations Teams", "Software Companies"],
+  "dataModalities": ["Code", "Configuration Files", "Log Data", "Metrics"],
+  "integrationType": "API-driven / Event-driven System"
+}

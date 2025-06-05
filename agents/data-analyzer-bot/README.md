@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0
 **Author:** Agentopia Core Team
-**Category:** Analytics
+**Category:** Data Analysis & Research
 **Type:** Regular Agent
 
 ## Overview

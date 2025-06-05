@@ -1,0 +1,94 @@
+{
+  "id": 6,
+  "name": "MarketMind Analytics",
+  "icon": "📈",
+  "version": "0.1.0",
+  "author": "Agentopia Core Team",
+  "agentType": "Specialized",
+  "agentScale": "Single-Agent",
+  "category": "Data Analysis & Research",
+  "subcategory": "Market & Trend Analysis",
+  "description": "An AI agent that continuously monitors market trends, financial news, social sentiment, and competitor activities to deliver actionable insights and predictive analytics.",
+  "long_description": "### Overview\nMarketMind Analytics is a specialized agent designed for market researchers, financial analysts, and business strategists. It leverages advanced data scraping, natural language processing, and machine learning techniques to gather and interpret vast amounts of market-related data from diverse sources. The agent identifies emerging trends, assesses market sentiment, tracks competitor movements, and can provide forecasts to support strategic decision-making.\n\n### Key Features:\n*   **Real-time Data Aggregation:** Collects data from news APIs, social media platforms, financial forums, and public company filings.\n*   **Sentiment Analysis:** Gauges public and market sentiment towards specific stocks, products, or brands.\n*   **Trend Identification:** Uses statistical models to detect emerging market trends and patterns.\n*   **Competitor Tracking:** Monitors competitor announcements, product launches, and strategic shifts.\n*   **Customizable Dashboards & Alerts:** Provides personalized dashboards and real-time alerts for critical market events.",
+  "configFields": [
+    {
+      "name": "KEYWORDS_OR_TOPICS",
+      "label": "Keywords/Topics to Monitor (Comma-separated)",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., AI in healthcare, renewable energy stocks, specific company names"
+    },
+    {
+      "name": "DATA_SOURCES_ENABLED",
+      "label": "Enable Data Sources",
+      "type": "checkbox_group",
+      "options": ["News APIs", "Social Media (Twitter, Reddit)", "Financial Forums", "SEC Filings"],
+      "required": true,
+      "defaultValue": ["News APIs", "Social Media (Twitter, Reddit)"]
+    },
+    {
+      "name": "ALERT_THRESHOLD",
+      "label": "Sentiment Alert Threshold (e.g., significant change %)",
+      "type": "number",
+      "required": false,
+      "placeholder": "e.g., 10 for a 10% change"
+    }
+  ],
+  "features": [
+    "Automated collection and analysis of market data.",
+    "Sentiment analysis for brands, products, and market topics.",
+    "Identification of emerging trends and investment opportunities.",
+    "Competitor intelligence gathering.",
+    "Customizable alerts and reporting."
+  ],
+  "tags": [
+    "market research",
+    "financial analysis",
+    "sentiment analysis",
+    "trend analysis",
+    "competitor analysis",
+    "investment insights",
+    "data mining"
+  ],
+  "demoUrl": "#",
+  "sourceUrl": "#",
+  "rating": 0,
+  "reviews": 0,
+  "entry_point": "analyzer_main.py",
+  "deployment_status": "planning",
+  "use_cases": [
+    "Identifying promising investment opportunities.",
+    "Tracking brand perception and managing reputation.",
+    "Understanding consumer behavior and market dynamics.",
+    "Performing due diligence for mergers and acquisitions.",
+    "Developing data-driven marketing strategies."
+  ],
+  "requirements": [
+    "python",
+    "beautifulsoup4",
+    "requests",
+    "nltk",
+    "pandas"
+  ],
+  "roadmap_features": [
+    "Predictive modeling for stock prices or market movements.",
+    "Integration with brokerage APIs for automated trading (experimental).",
+    "Advanced anomaly detection in market data.",
+    "Natural language query interface for insights.",
+    "Comparative analysis tools for multiple stocks or products."
+  ],
+  "llm_dependency": {
+    "type": "core",
+    "notes": "LLMs are crucial for advanced NLP tasks like summarization of news articles, nuanced sentiment analysis, and generating insight reports."
+  },
+  "privacy_considerations": "Relies on publicly available data. Users should be mindful of the terms of service of data sources. No personal user data is stored beyond configuration preferences. API keys for data sources should be managed securely.",
+  "docker_info": {
+    "image_name_pattern": "agentopia/marketmind-analytics:<version>",
+    "notes": "Can be run as a standalone Docker container."
+  },
+  "setup_instructions": "### Prerequisites:\n*   Python 3.8+ installed.\n*   API keys for any premium news or social media data sources.\n\n### Running Locally (Example - Actual setup TBD)\n1.  Clone the MarketMind Analytics repository.\n2.  Install dependencies: `pip install -r requirements.txt`.\n3.  Configure API keys and keywords in a `config.yaml` file.\n4.  Run the agent: `python analyzer_main.py --config config.yaml`.",
+  "developmentFrameworks": ["Python", "Scrapy (optional)", "NLTK/spaCy"],
+  "intendedAudience": ["Financial Analysts", "Market Researchers", "Investors", "Business Strategists"],
+  "dataModalities": ["Text", "Numerical Data (Stock Prices)"],
+  "integrationType": "Standalone Application / API Service"
+}

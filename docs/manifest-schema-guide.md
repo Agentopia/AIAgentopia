@@ -39,12 +39,10 @@
 *   **`category`**: (string, required)
     *   Description: Primary functional or domain-oriented category for the agent.
     *   Enum Values:
-        *   `"Productivity & Organization"`
-        *   `"Content Creation & Design"`
         *   `"Data Analysis & Research"`
+        *   `"Productivity & Organization"`
         *   `"Automation & Utilities"`
-        *   `"Education & Learning"`
-        *   `"Business & Finance"`
+        *   `"Creative Content & Design"`
     *   Example: `"Data Analysis & Research"`
 *   **`subcategory`**: (string, optional)
     *   Description: Optional sub-category for more granular functional classification.
@@ -193,7 +191,7 @@ This section details how users will set up and run the agent, with a strong emph
   "author": "Agentopia Team",
   "deployment_status": "development",
   "icon": "📊",
-  "category": "Analytics",
+  "category": "Data Analysis & Research",
   "type": "tool",
   "scale": "intermediate",
   "tags": ["data analysis", "csv", "python", "docker"],

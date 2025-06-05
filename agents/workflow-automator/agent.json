@@ -1,0 +1,75 @@
+{
+  "id": 3,
+  "name": "Workflow Automator",
+  "icon": "⚙️",
+  "version": "0.1.0",
+  "author": "Agentopia Core Team",
+  "agentType": "Autonomous",
+  "agentScale": "Single-Agent",
+  "category": "Automation & Utilities",
+  "subcategory": "Process Automation",
+  "description": "An autonomous agent that learns your workflows and automates repetitive digital tasks across applications.",
+  "long_description": "### Overview\nThe Workflow Automator is designed to observe, learn, and execute repetitive digital tasks, freeing you up for more complex and creative work. It can interact with various applications, APIs, and system processes to streamline your daily operations. Ideal for automating data entry, report generation, file management, and other routine business processes.\n\n### Key Features:\n*   **Task Recording & Learning (Future):** Ability to learn workflows by observing user actions.\n*   **Cross-Application Automation:** Can interact with web browsers, desktop applications, and APIs.\n*   **Scheduled & Triggered Execution:** Run automations on a schedule or based on specific events.\n*   **Customizable Scripts:** Define automation logic using a simple scripting interface or visual builder (Future).\n*   **Error Handling & Reporting:** Robust error handling and logging for reliable automation.",
+  "configFields": [
+    {
+      "name": "AUTOMATION_SCRIPT_PATH",
+      "label": "Path to Automation Script/Configuration",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., scripts/my_automation.json"
+    },
+    {
+      "name": "LOG_LEVEL",
+      "label": "Log Level",
+      "type": "select",
+      "options": ["DEBUG", "INFO", "WARNING", "ERROR"],
+      "required": false,
+      "defaultValue": "INFO"
+    }
+  ],
+  "features": [
+    "Automates repetitive digital tasks.",
+    "Integrates with multiple applications and systems (planned).",
+    "Supports scheduled and event-triggered automations.",
+    "Provides logging and monitoring for automated processes."
+  ],
+  "tags": [
+    "automation",
+    "rpa",
+    "workflow",
+    "process automation",
+    "efficiency",
+    "digital assistant"
+  ],
+  "demoUrl": "#",
+  "sourceUrl": "#",
+  "rating": 0,
+  "reviews": 0,
+  "entry_point": "main.py",
+  "deployment_status": "planning",
+  "use_cases": [
+    "Automating data entry from emails to spreadsheets.",
+    "Generating daily/weekly reports from various sources.",
+    "Automated file organization and backups.",
+    "Synchronizing data between different applications.",
+    "Automating software testing routines."
+  ],
+  "requirements": [
+    "python"
+  ],
+  "roadmap_features": [
+    "Visual workflow designer.",
+    "AI-powered workflow suggestion and optimization.",
+    "Expanded library of pre-built integrations.",
+    "Secure credential management.",
+    "User interface for managing and monitoring automations."
+  ],
+  "llm_dependency": null,
+  "privacy_considerations": "Workflow automation scripts may interact with sensitive data and applications. Ensure scripts are reviewed for security. Credentials should be managed securely, ideally not hardcoded. Local execution is prioritized for data privacy.",
+  "docker_info": null,
+  "setup_instructions": "### Prerequisites:\n*   Python 3.8+ installed.\n\n### Running Locally with Python (Example - Actual setup TBD)\n1.  Clone the agent's source code repository.\n2.  Navigate to the agent's root directory (`AIAgentopia/agents/workflow-automator`).\n3.  Create and activate a Python virtual environment.\n4.  Install dependencies: `pip install -r requirements.txt` (once defined).\n5.  Configure your automation script(s).\n6.  Run the agent: `python main.py --script_path /path/to/your/script.json` (actual command TBD).",
+  "developmentFrameworks": ["Python"],
+  "intendedAudience": ["Business Users", "IT Professionals", "Developers"],
+  "dataModalities": ["Text", "Files", "API Data"],
+  "integrationType": "CLI tool / Background Service"
+}

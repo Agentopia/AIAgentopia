@@ -1,0 +1,97 @@
+{
+  "id": 7,
+  "name": "FocusForge",
+  "icon": "🎯",
+  "version": "0.1.0",
+  "author": "Agentopia Core Team",
+  "agentType": "Utility",
+  "agentScale": "Single-Agent",
+  "category": "Productivity & Organization",
+  "subcategory": "Time & Task Management",
+  "description": "An AI-powered assistant to help you maintain focus, manage tasks effectively, and optimize your work/study sessions using techniques like Pomodoro and smart break scheduling.",
+  "long_description": "### Overview\nFocusForge is your personal productivity companion designed to help you combat distractions and enhance concentration. It integrates proven time management techniques with intelligent suggestions to create an optimal work environment. Whether you're studying for exams, working on a big project, or just trying to manage daily tasks, FocusForge helps you stay on track and make the most of your time.\n\n### Key Features:\n*   **Intelligent Pomodoro Timer:** Customizable work and break intervals with smart suggestions based on your activity patterns (Future).\n*   **Task Management:** Simple to-do list integration to organize your tasks for each focus session.\n*   **Distraction Blocking (Future):** Integration with website/app blockers during focus sessions.\n*   **Ambient Sounds & Focus Music:** Curated audio to help maintain concentration.\n*   **Progress Tracking & Analytics:** Visualize your focused work time and productivity trends.",
+  "configFields": [
+    {
+      "name": "WORK_INTERVAL_MINUTES",
+      "label": "Default Work Interval (minutes)",
+      "type": "number",
+      "required": true,
+      "defaultValue": 25,
+      "placeholder": "e.g., 25"
+    },
+    {
+      "name": "SHORT_BREAK_MINUTES",
+      "label": "Default Short Break (minutes)",
+      "type": "number",
+      "required": true,
+      "defaultValue": 5,
+      "placeholder": "e.g., 5"
+    },
+    {
+      "name": "LONG_BREAK_MINUTES",
+      "label": "Default Long Break (minutes)",
+      "type": "number",
+      "required": true,
+      "defaultValue": 15,
+      "placeholder": "e.g., 15"
+    },
+    {
+      "name": "SESSIONS_BEFORE_LONG_BREAK",
+      "label": "Work Sessions Before Long Break",
+      "type": "number",
+      "required": true,
+      "defaultValue": 4,
+      "placeholder": "e.g., 4"
+    }
+  ],
+  "features": [
+    "Customizable Pomodoro timer.",
+    "Integrated task list for focus sessions.",
+    "Selection of ambient sounds and focus music.",
+    "Basic progress tracking for focused work.",
+    "Smart break scheduling suggestions (planned)."
+  ],
+  "tags": [
+    "productivity",
+    "focus",
+    "time management",
+    "pomodoro",
+    "task management",
+    "concentration",
+    "study aid"
+  ],
+  "demoUrl": "#",
+  "sourceUrl": "#",
+  "rating": 0,
+  "reviews": 0,
+  "entry_point": "focus_app.py",
+  "deployment_status": "planning",
+  "use_cases": [
+    "Improving focus during work or study sessions.",
+    "Managing daily tasks more effectively.",
+    "Reducing procrastination and distractions.",
+    "Building consistent work habits.",
+    "Tracking time spent on different activities."
+  ],
+  "requirements": [
+    "python"
+  ],
+  "roadmap_features": [
+    "AI-driven personalized focus plans.",
+    "Integration with calendar and to-do list apps.",
+    "Advanced distraction blocking features.",
+    "Gamification and rewards for achieving focus goals.",
+    "Team-based focus sessions (optional)."
+  ],
+  "llm_dependency": {
+    "type": "minimal",
+    "notes": "LLM might be used for future features like smart scheduling suggestions or summarizing productivity patterns, but not core to basic functionality."
+  },
+  "privacy_considerations": "All task and productivity data is stored locally by default. No personal data is transmitted unless explicitly configured for cloud sync (future feature).",
+  "docker_info": null,
+  "setup_instructions": "### Prerequisites:\n*   Python 3.8+ installed.\n\n### Running Locally (Example - Actual setup TBD)\n1.  Clone the FocusForge repository.\n2.  Install dependencies: `pip install -r requirements.txt` (if any).\n3.  Run the application: `python focus_app.py`.",
+  "developmentFrameworks": ["Python", "GUI Framework (e.g., Tkinter, PyQt, Kivy - TBD)"],
+  "intendedAudience": ["Students", "Professionals", "Freelancers", "Anyone looking to improve focus"],
+  "dataModalities": ["User Input (Tasks)"],
+  "integrationType": "Desktop Application / Web Application (Future)"
+}

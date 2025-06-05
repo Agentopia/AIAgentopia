@@ -1,0 +1,67 @@
+{
+  "id": 2,
+  "name": "Task Assistant",
+  "icon": "📝",
+  "version": "0.1.0",
+  "author": "Agentopia Core Team",
+  "agentType": "Assistant",
+  "agentScale": "Single-Agent",
+  "category": "Productivity & Organization",
+  "subcategory": "Task Management",
+  "description": "A personal assistant to help you manage tasks, organize your schedule, and boost your daily productivity.",
+  "long_description": "### Overview\nThe Task Assistant is your go-to digital helper for staying on top of your commitments. It allows you to create, track, and prioritize tasks, set reminders, and manage your calendar effectively. Whether you're a busy professional, a student, or anyone looking to improve personal organization, this agent aims to simplify your daily planning.\n\n### Key Features:\n*   **Task Creation & Management:** Easily add new tasks, set due dates, and categorize them.\n*   **Prioritization:** Helps you identify and focus on your most important tasks.\n*   **Reminders:** Set up notifications so you never miss a deadline.\n*   **Calendar Integration (Future):** Seamlessly sync with your existing calendar applications.\n*   **Simple Interface:** Designed for quick and intuitive interaction.",
+  "configFields": [
+    {
+      "name": "DEFAULT_TASK_LIST_NAME",
+      "label": "Default Task List Name",
+      "type": "text",
+      "required": false,
+      "placeholder": "e.g., My Tasks, Work Projects",
+      "defaultValue": "My Tasks"
+    }
+  ],
+  "features": [
+    "Create and manage to-do lists.",
+    "Set task priorities and due dates.",
+    "Receive reminders for upcoming tasks.",
+    "Simple and intuitive user interface."
+  ],
+  "tags": [
+    "task management",
+    "to-do list",
+    "organizer",
+    "productivity",
+    "personal assistant",
+    "scheduling"
+  ],
+  "demoUrl": "#",
+  "sourceUrl": "#",
+  "rating": 0,
+  "reviews": 0,
+  "entry_point": "main.py",
+  "deployment_status": "planning",
+  "use_cases": [
+    "Managing daily personal tasks.",
+    "Organizing work projects and deadlines.",
+    "Keeping track of study assignments.",
+    "Planning events and appointments."
+  ],
+  "requirements": [
+    "python"
+  ],
+  "roadmap_features": [
+    "Calendar integration (Google Calendar, Outlook).",
+    "Recurring tasks.",
+    "Sub-tasks.",
+    "Collaboration features for shared task lists.",
+    "Natural Language Processing for task input."
+  ],
+  "llm_dependency": null,
+  "privacy_considerations": "This agent is intended for local execution or secure cloud deployment. Task data is stored locally by default. If cloud services are used for features like calendar sync, data handling will be subject to the privacy policies of those services.",
+  "docker_info": null,
+  "setup_instructions": "### Prerequisites:\n*   Python 3.8+ installed.\n\n### Running Locally with Python (Example - Actual setup TBD)\n1.  Clone the agent's source code repository.\n2.  Navigate to the agent's root directory (`AIAgentopia/agents/task-assistant`).\n3.  Create and activate a Python virtual environment.\n4.  Install dependencies: `pip install -r requirements.txt` (once defined).\n5.  Run the agent: `python main.py` (actual command TBD).",
+  "developmentFrameworks": ["Python"],
+  "intendedAudience": ["General Users", "Students", "Professionals"],
+  "dataModalities": ["Text"],
+  "integrationType": "CLI tool / Local Application"
+}
