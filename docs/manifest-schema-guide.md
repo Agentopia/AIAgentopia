@@ -37,17 +37,31 @@
 ## 3. Categorization & Discovery
 
 *   **`category`**: (string, required)
-    *   Description: Main functional category of the agent. This must match one of the predefined categories used for filtering in the Agentopia portal.
-    *   Enum: `["Productivity", "Analytics", "Automation", "Development", "Research", "Education", "Utility", "Creative", "Entertainment", "Social", "Business"]` (Ensure this list is kept in sync with portal capabilities)
-    *   Example: `"Analytics"`
-*   **`type`**: (string, required)
-    *   Description: The operational type of the agent, indicating its primary mode of interaction or design. Must match predefined types for portal filtering.
-    *   Enum: `["assistant", "autonomous", "hybrid", "service", "tool"]` (Ensure this list is kept in sync with portal capabilities)
-    *   Example: `"tool"`
-*   **`scale`**: (string, required)
-    *   Description: Indicates the complexity, scope, or typical deployment scale of the agent.
-    *   Enum: `["simple", "intermediate", "advanced", "complex", "enterprise"]` (Ensure this list is kept in sync with portal capabilities)
-    *   Example: `"intermediate"`
+    *   Description: Primary functional or domain-oriented category for the agent.
+    *   Enum Values:
+        *   `"Productivity & Organization"`
+        *   `"Content Creation & Design"`
+        *   `"Data Analysis & Research"`
+        *   `"Automation & Utilities"`
+        *   `"Education & Learning"`
+        *   `"Business & Finance"`
+    *   Example: `"Data Analysis & Research"`
+*   **`subcategory`**: (string, optional)
+    *   Description: Optional sub-category for more granular functional classification.
+    *   Example: `"Task Management"` (under `"Productivity & Organization"`)
+*   **`agentType`**: (string, required)
+    *   Description: Describes the agent's primary operational mode: Assistant (user-directed), Autonomous (self-directed), or Hybrid (mixed-initiative).
+    *   Enum Values:
+        *   `"Assistant"`
+        *   `"Autonomous"`
+        *   `"Hybrid"`
+    *   Example: `"Autonomous"`
+*   **`agentScale`**: (string, required)
+    *   Description: Describes the structural complexity: Single-Agent (operates individually) or Multi-Agent (part of a coordinated team or system).
+    *   Enum Values:
+        *   `"Single-Agent"`
+        *   `"Multi-Agent"`
+    *   Example: `"Single-Agent"`
 *   **`tags`**: (array of strings, required, minItems: 1)
     *   Description: A list of relevant keywords or phrases that help users discover the agent through search or tag-based filtering.
     *   Example: `["csv", "data analysis", "statistics", "visualization", "python"]`
@@ -83,7 +97,7 @@ This section details how users will set up and run the agent, with a strong emph
     *   Description: Specific command or brief instructions for pulling the Docker image. If left empty, the Agentopia portal might default to displaying `docker pull [docker_image_name]`. Can be overridden for special cases (e.g., private registries requiring login). Supports Markdown.
     *   Example: `"docker pull agentopia/data-analyzer-bot:1.0.2"`
 *   **`docker_run_instructions`**: (string, required)
-    *   Description: Detailed instructions and example commands for running the agent via Docker. This is a critical field for user success and should cover essential aspects like: 
+    *   Description: Detailed instructions and example commands for running the agent via Docker. This is a critical field for user success and should cover essential aspects like:
         *   Volume mounting for input data and output results (e.g., `-v /path/to/your/data:/data`).
         *   Port mapping if the agent exposes a web UI or API (e.g., `-p 8080:5000`).
         *   Passing necessary environment variables for configuration (e.g., `-e API_KEY=your_value -e OUTPUT_FORMAT=json`).

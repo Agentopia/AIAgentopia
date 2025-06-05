@@ -3,15 +3,15 @@
   "title": "Agent Manifest Schema",
   "type": "object",
   "required": [
-    "name", "description", "category", "type", "scale", "features",
+    "name", "description", "category", "agentType", "agentScale", "features",
     "tags", "version", "author", "entry_point",
     "long_description", "use_cases", "docker_image_name", "docker_run_instructions", "llm_dependency"
   ],
   "properties": {
     "name": { "type": "string", "description": "Unique agent name" },
     "description": { "type": "string", "description": "A brief, one-sentence summary of the agent's primary function. For a more detailed explanation, use 'long_description'." },
-    "long_description": { 
-      "type": "string", 
+    "long_description": {
+      "type": "string",
       "description": "A detailed description of the agent, its purpose, capabilities, and primary use cases. Supports Markdown for rich formatting. This will be used for the main overview section on the agent detail page."
     },
     "use_cases": {
@@ -22,18 +22,44 @@
     },
     "category": {
       "type": "string",
-      "enum": ["Productivity", "Analytics", "Automation"],
-      "description": "Main category (must match portal filters)"
+      "enum": ["Productivity & Organization", "Content Creation & Design", "Data Analysis & Research", "Automation & Utilities", "Education & Learning", "Business & Finance"],
+      "description": "Primary functional or domain-oriented category for the agent."
     },
-    "type": {
+    "subcategory": {
       "type": "string",
-      "enum": ["regular", "autonomous", "team"],
-      "description": "Agent type (must match portal filters)"
+      "description": "Optional sub-category for more granular functional classification (e.g., 'Task Management' under 'Productivity & Organization')."
     },
-    "scale": {
+    "agentType": {
       "type": "string",
-      "enum": ["single", "multiple"],
-      "description": "Single agent or team"
+      "enum": ["Assistant", "Autonomous", "Hybrid"],
+      "description": "Describes the agent's primary operational mode: Assistant (user-directed), Autonomous (self-directed), or Hybrid (mixed-initiative)."
+    },
+    "agentScale": {
+      "type": "string",
+      "enum": ["Single-Agent", "Multi-Agent"],
+      "description": "Describes the structural complexity: Single-Agent (operates individually) or Multi-Agent (part of a coordinated team or system)."
+    },
+    "developmentFrameworks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of development frameworks, libraries, or SDKs used (e.g., LangChain, AutoGen, OpenAI API).",
+      "default": []
+    },
+    "intendedAudience": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Specifies the primary target users for this agent (e.g., Developers, Marketers, Researchers, General Users).",
+      "default": []
+    },
+    "dataModalities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of data modalities the agent primarily works with (e.g., Text, Image, Tabular Data, Code).",
+      "default": []
+    },
+    "integrationType": {
+      "type": "string",
+      "description": "How the agent is typically used or deployed (e.g., Standalone, API-based, CLI tool, Browser Extension)."
     },
     "features": {
       "type": "array",
