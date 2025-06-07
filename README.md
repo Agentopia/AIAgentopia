@@ -28,6 +28,14 @@ AIAgentopia/
 ├── README.md         # Project overview (this file)
 ```
 
+## 🏗️ Project Architecture
+
+- **[Layered Architecture](./docs/layered-architecture.md):**
+  Explains our long-term vision and the layered approach to building, organizing, and evolving AIAgentopia. Covers the foundational layers, agentic frameworks, integration, and user-facing documentation.
+
+- **[Directory Structure Reference](./docs/directory-structure.md):**
+  Shows the recommended folder layout for the repo, with explanations for each top-level directory and best practices for agent isolation and code reuse.
+
 ## 🤝 Contributing
 We welcome contributions from the community! Please open an issue or submit a pull request. See `CONTRIBUTING.md` (to be added) for guidelines.
 

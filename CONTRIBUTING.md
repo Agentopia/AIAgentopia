@@ -1,6 +1,6 @@
 # Contributing to AIAgentopia
 
-Thank you for your interest in contributing to AIAgentopia!  
+Thank you for your interest in contributing to AIAgentopia!
 We welcome new agents, improvements, and ideas from the community.
 
 ---
@@ -108,13 +108,13 @@ By following this process, you help maintain the quality and reliability of agen
 
 ## ❓ FAQ
 
-**Q: Can I use a different programming language for my agent?**  
+**Q: Can I use a different programming language for my agent?**
 A: Yes! Just make sure your `entry_point` field is accurate and your setup instructions are clear.
 
-**Q: How do I add setup instructions for API keys or credentials?**  
+**Q: How do I add setup instructions for API keys or credentials?**
 A: Use the `setup_instructions` and `config_fields` fields in your manifest. See the schema for examples.
 
-**Q: What if I’m not sure about a field?**  
+**Q: What if I’m not sure about a field?**
 A: Open an issue or ask for help in your pull request—we’re here to help!
 
 ---
@@ -134,6 +134,55 @@ A: Open an issue or ask for help in your pull request—we’re here to help!
 - Respect different perspectives and backgrounds.
 - Help others learn—no question is too basic!
 - Celebrate progress and creativity.
+
+---
+
+## 🗂️ Issue & Milestone Organization Workflow
+
+To keep project management clear and scalable, follow these conventions when creating Issues and Milestones for each development phase:
+
+### 1. Milestone Usage
+- **Create a Milestone** for each major phase (e.g., Phase 1, Phase 2) via the GitHub UI.
+- Assign all related Issues for that phase to the Milestone. The Milestone’s progress bar will update automatically as Issues are closed.
+
+### 2. Cap/Epic Issue Convention (Optional but Recommended)
+- For each phase, you may create a `[Cap]` or `[Epic]` Issue as a high-level tracker.
+- Add a Markdown checklist in the Cap/Epic Issue referencing all sub-Issues by number (e.g., `- [ ] #12 Sub-task`).
+- Label Cap/Epic Issues with `cap` or `epic` for clarity.
+- Use the Cap/Epic Issue for summaries, status updates, and discussion.
+
+### 3. Sub-Issue Naming & Linking
+- Prefix actionable Issues with `[Task]` or another clear label.
+- Assign each sub-Issue to the relevant Milestone.
+- Reference sub-Issues in the Cap/Epic Issue’s checklist for easy tracking.
+
+### 4. Example Workflow
+1. **Create Milestone:**
+   - `[Milestone] Phase 1: Foundational & Core Infrastructure`
+2. **Create Cap/Epic Issue:**
+   - Title: `[Cap] Phase 1: Foundational & Core Infrastructure`
+   - Body includes:
+     ```markdown
+     ## Phase 1 Task Checklist
+     - [ ] #2 Create and document the layered architecture
+     - [ ] #3 Establish foundational environment setup (Docker, venv, dependency management)
+     - [ ] #4 Implement logging and error handling utilities
+     - [ ] #5 Implement config management utility
+     - [ ] #6 Implement LLM interface (API & local/Ollama)
+     - [ ] #7 Implement manifest schema and validation tools
+     ```
+3. **Create Sub-Issues:**
+   - `[Task] Create and document the layered architecture` (assigned to Milestone)
+   - `[Task] Establish foundational environment setup (Docker, venv, dependency management)` (assigned to Milestone)
+   - ...and so on for each task.
+4. **Link Sub-Issues:**
+   - In the Cap/Epic Issue, reference each sub-Issue by number using `#issue-number`.
+   - Checkboxes will auto-update as Issues are closed.
+
+### 5. Tips
+- For most tracking, the Milestone alone is sufficient. Use Cap/Epic Issues for extra clarity or discussion.
+- Use labels like `task`, `cap`, `epic`, and `phase-1` to organize Issues.
+- See [GitHub’s Milestone documentation](https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/about-milestones) for more details.
 
 ---
 
