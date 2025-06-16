@@ -21,7 +21,10 @@ This document describes the recommended directory structure for the AIAgentopia 
 AIAgentopia/
 ├── agents/
 │   ├── data-analyzer-bot/
-│   │   ├── main.py
+│   │   ├── app/
+│   │   │   └── main.py
+│   │   ├── docs/
+│   │   │   └── PRD.md
 │   │   ├── requirements.txt
 │   │   ├── agent.json
 │   │   ├── README.md
@@ -65,11 +68,13 @@ AIAgentopia/
 
 ## Notes
 - Each agent lives in its own subdirectory under `/agents/`.
+    - **New agents should place their core source code within an `app/` subdirectory** (e.g., `agents/{agent-name}/app/main.py`) as per the [Agent Development Standards](./agent-development-standards.md#directory-structure).
+    - Some existing agents may have their main script directly in their root folder (e.g., `agents/{agent-name}/main.py`).
 - Shared utilities and tools go in `/tools/`.
 - Framework-specific helpers are in `/frameworks/`.
-- All documentation is kept in `/docs/`.
+- All project-level documentation is kept in `/docs/`. Agent-specific documentation resides within each agent's own `/docs` subfolder.
 - Scripts for setup, deployment, or automation are in `/scripts/`.
-- The root contains project-wide configs and documentation.
+- The root contains project-wide configs and top-level documentation (`README.md`, `CONTRIBUTING.md`).
 
 ---
 

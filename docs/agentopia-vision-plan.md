@@ -54,7 +54,7 @@
 *   Agent developers contributing to Agentopia are expected to align with these principles.
 *   Manifests (`agent.json`) must be detailed and accurately reflect the agent's architecture, data handling, configuration, and LLM usage model.
 *   Comprehensive setup instructions, especially for Docker-based execution, are paramount.
-*   (Link to more detailed future `CONTRIBUTING.md` or development guidelines specific to this model).
+*   Refer to the [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed development guidelines.
 
 ## 6. Our Commitment to the Future
 *   Agentopia will continue to evolve, always prioritizing these core principles of user privacy, control, and transparency.

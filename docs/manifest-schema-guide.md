@@ -192,8 +192,8 @@ This section details how users will set up and run the agent, with a strong emph
   "deployment_status": "development",
   "icon": "📊",
   "category": "Data Analysis & Research",
-  "type": "tool",
-  "scale": "intermediate",
+  "agentType": "Autonomous",
+  "agentScale": "Single-Agent",
   "tags": ["data analysis", "csv", "python", "docker"],
   "use_cases": [
     "Quickly generate statistical summaries from CSV files.",

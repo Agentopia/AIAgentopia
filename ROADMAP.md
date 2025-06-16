@@ -1,7 +1,7 @@
 # AIAgentopia Project Roadmap
 
 **Version:** v1.0
-**Last Updated:** 2025-06-06
+**Last Updated:** 2025-06-15
 
 ---
 
@@ -29,6 +29,7 @@ AIAgentopia is committed to building a modular, privacy-first, and extensible pl
   - [ ] Config management
   - [ ] Logging and error handling
   - [ ] Manifest schema and validation tools
+- [x] Establish and refine core project documentation (README, CONTRIBUTING, LICENSE, CODE_OF_CONDUCT, development standards, directory structure).
 
 ### Phase 2: Frameworks & Agent Implementation
 

@@ -116,7 +116,7 @@ if (specificManifestPath) {
     const manifestFilePath = path.join(agentFolderPath, 'agent.json');
     // Call validateSingleManifest for each found agent.json
     // The original validateAgentManifest took a directory; adapting to take a file path.
-    validateSingleManifest(manifestFilePath); 
+    validateSingleManifest(manifestFilePath);
   }
 });
 } // End of else block for scanning all agents
