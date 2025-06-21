@@ -1,0 +1,23 @@
+line-length = 120
+
+[per-file-ignores]
+"app/ai_data_analyst.py" = ["F401", "E501"]
+
+target-version = "py38"
+
+[fix]
+# Enable autofix for safe fixes
+fixable = ["ALL"]
+unfixable = []
+
+[exclude]
+# Exclude files and directories
+extend-exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    "__pycache__",
+    "node_modules",
+    "venv",
+    ".venv"
+]

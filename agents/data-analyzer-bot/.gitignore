@@ -1,0 +1,8 @@
+# Ignore virtual environment
+.venv/
+
+# Ignore sample directory as requested
+sample/
+
+# Ignore code review answers as requested
+code-review-answers.md

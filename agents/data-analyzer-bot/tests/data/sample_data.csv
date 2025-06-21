@@ -1,0 +1,6 @@
+id,name,value,transaction_date,notes,status
+1,"Product A",100.5,2023-01-15,"A ""quoted"" note",active
+2,"Product B",200,2023-02-20,,active
+3,"Product C",NA,2023-03-10,Another note,inactive
+4,"Product D",150.75,N/A,Final note,active
+5,"Product E",missing,2023-05-01,Yet another,inactive
