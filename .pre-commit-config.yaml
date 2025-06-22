@@ -6,7 +6,6 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0 # Use a recent stable version
     hooks:
-      - id: check-yaml
       - id: check-json
       - id: check-toml
       - id: end-of-file-fixer

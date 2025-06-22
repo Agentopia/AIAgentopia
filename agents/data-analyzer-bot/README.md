@@ -112,26 +112,34 @@ You can run the Data Analyzer Bot using Docker (recommended for ease of use and 
     *   Example (bash/zsh): `export OPENAI_API_KEY="your_openai_api_key_here"`
     *   Example (PowerShell): `$env:OPENAI_API_KEY="your_openai_api_key_here"`
 
-5.  **Run the Agent Script:**
-    Execute the main Python script (`main.py`), providing the path to your data file and an output directory.
+5.  **Run the Streamlit App:**
+    Execute the Streamlit application directly using the virtual environment's Streamlit executable:
     ```bash
-    python main.py --data_file /path/to/your/datafile.csv --output_dir ./my_eda_results
+    # On Windows:
+    .venv\Scripts\streamlit.exe run app\ai_data_analyst.py
+
+    # On macOS/Linux:
+    .venv/bin/streamlit run app/ai_data_analyst.py
     ```
-    *   Replace `/path/to/your/datafile.csv` with the actual path to your data file.
-    *   Replace `./my_eda_results` with your desired output directory path.
+
+    This will start the Streamlit web interface. Open your browser to the URL shown in the terminal (typically http://localhost:8501) to access the Data Analyzer Bot's interface.
 
 6.  **Accessing Results:**
     After the script finishes, navigate to the output directory you specified (e.g., `./my_eda_results`). Open `report.html` in your web browser.
 
 ## Configuration
 
-The primary way to configure the bot is through command-line arguments when running the script or Docker container:
+The Data Analyzer Bot is configured through its web-based user interface:
 
-*   `--data_file <path>`: (Required) Path to the input data file (CSV or Excel).
-*   `--output_dir <path>`: (Optional) Directory where the report and analysis files will be saved. Defaults to `./output` relative to where the script is run or inside the mounted volume for Docker.
+1. **Data Upload**: The Streamlit interface allows you to upload CSV or Excel files directly through the browser.
+
+2. **Output Directory**: You can specify the output directory for reports and visualizations within the web interface.
+
+3. **LLM Provider Selection**: Choose between OpenAI or Anthropic Claude for generating insights (if API keys are provided).
 
 Environment Variables:
-*   `OPENAI_API_KEY`: (Optional) Your API key for OpenAI if you want to enable LLM-generated summaries.
+*   `OPENAI_API_KEY`: (Optional) Your API key for OpenAI if you want to enable OpenAI-based summaries.
+*   `ANTHROPIC_API_KEY`: (Optional) Your API key for Anthropic if you want to use Claude for generating insights.
 
 ## LLM Dependency and Privacy
 
