@@ -6,3 +6,6 @@ sample/
 
 # Ignore code review answers as requested
 code-review-answers.md
+
+# Ignore environment variables file
+.env

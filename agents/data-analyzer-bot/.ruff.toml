@@ -1,17 +1,9 @@
+# Top-level settings
 line-length = 120
-
-[per-file-ignores]
-"app/ai_data_analyst.py" = ["F401", "E501"]
-
 target-version = "py38"
+fix = true
 
-[fix]
-# Enable autofix for safe fixes
-fixable = ["ALL"]
-unfixable = []
-
-[exclude]
-# Exclude files and directories
+# A list of files and directories to exclude from checks.
 extend-exclude = [
     ".git",
     ".mypy_cache",
@@ -21,3 +13,13 @@ extend-exclude = [
     "venv",
     ".venv"
 ]
+
+# Linting section
+[lint]
+# Enable autofix for all safe fixes.
+fixable = ["ALL"]
+unfixable = []
+
+# Per-file rule ignores
+[lint.per-file-ignores]
+"app/ai_data_analyst.py" = ["F401", "E501"]

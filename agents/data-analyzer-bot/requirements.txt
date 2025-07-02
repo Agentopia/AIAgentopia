@@ -5,3 +5,7 @@ pandas
 numpy==1.26.4
 openpyxl
 anthropic
+python-dotenv
+matplotlib
+seaborn
+markdown

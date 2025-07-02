@@ -1,25 +1,21 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+# Use a more recent, stable Python version
+FROM python:3.11-slim
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the dependencies file to the working directory
+# Copy the requirements file and install dependencies
 COPY requirements.txt .
-
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code to the working directory
-# This assumes your Streamlit script is in a subdirectory named 'app'
-COPY app/ ./app/
+# Copy the application code into the working directory
+COPY app/ .
 
-# Make port 8501 available to the world outside this container
+# Expose the port Streamlit will run on
 EXPOSE 8501
 
-# Define environment variable for Streamlit
-# This helps in running Streamlit headlessly in a container
+# Set the headless environment variable for Streamlit
 ENV STREAMLIT_SERVER_HEADLESS=true
 
-# Run app.py when the container launches
-CMD ["streamlit", "run", "app/ai_data_analyst.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Run the Streamlit app when the container launches
+CMD ["streamlit", "run", "ai_data_analyst.py", "--server.port=8501", "--server.address=0.0.0.0"]
