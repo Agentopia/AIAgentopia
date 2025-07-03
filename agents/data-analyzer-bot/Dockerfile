@@ -18,4 +18,4 @@ EXPOSE 8501
 ENV STREAMLIT_SERVER_HEADLESS=true
 
 # Run the Streamlit app when the container launches
-CMD ["streamlit", "run", "ai_data_analyst.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "ai_data_analyst.py", "--server.address=0.0.0.0", "--server.port=8501"]
