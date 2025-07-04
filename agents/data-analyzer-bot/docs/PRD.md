@@ -84,9 +84,12 @@
 
 ## 6. Future Enhancements (Roadmap)
 
-*   Interactive HTML reports (e.g., using Plotly).
-*   Data cleaning suggestions.
-*   Support for more data formats (e.g., Parquet).
-*   Direct database connections.
-*   Customizable analysis options within the web UI (e.g., checkboxes to select specific charts or analyses).
-*   Enhanced error handling and user feedback for API key issues or LLM communication problems.
+*   **Advanced UI Configuration:**
+    *   **Analysis Parameters:** Allow users to set outlier detection sensitivity, missing value thresholds, and categorical column limits.
+    *   **Visualization Settings:** Enable selection of default color palettes and histogram bin counts.
+    *   **LLM & AI Summary:** Allow pre-selection of a default LLM and provide a text area for custom analysis prompts.
+    *   **Report Customization:** Enable setting a default report title and choosing which analysis sections to include in the final report.
+*   **Interactive HTML Reports:** Enhance reports with interactive charts and tables (e.g., using Plotly).
+*   **Data Cleaning:** Provide suggestions for data cleaning and options for automated application.
+*   **Expanded Data Source Support:** Add support for more data formats (e.g., Parquet) and direct database connections.
+*   **Improved Error Handling:** Implement more robust error handling and user feedback for API key issues or LLM communication problems.
