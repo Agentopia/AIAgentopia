@@ -598,12 +598,12 @@ def generate_html_report(df, summary_content, analysis_content, plots):
     </head>
     <body>
         <h1>Data Analysis Report</h1>
-        
+
         <div class="section">
             <h2>AI Summary</h2>
             {summary_html}
         </div>
-        
+
         <div class="section">
             <h2>Automated Analysis</h2>
             {analysis_html}
@@ -613,7 +613,7 @@ def generate_html_report(df, summary_content, analysis_content, plots):
             <h2>Data Preview (First 5 Rows)</h2>
             {df_html}
         </div>
-        
+
         <div class="section">
             <h2>Visualizations</h2>
             {plots_html}

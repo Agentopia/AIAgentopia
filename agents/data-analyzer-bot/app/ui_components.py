@@ -4,6 +4,7 @@ Reusable Streamlit UI components for the Data Analyzer Bot.
 This module provides standardized functions to display common UI elements like
 headers, footers, and titles, ensuring a consistent look and feel across the application.
 """
+
 import streamlit as st
 import base64
 import os
