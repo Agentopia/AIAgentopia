@@ -113,7 +113,8 @@ You can run the Data Analyzer Bot using Docker (recommended for ease of use and 
     *   Example (PowerShell): `$env:OPENAI_API_KEY="your_openai_api_key_here"`
 
 5.  **Run the Streamlit App:**
-    Execute the Streamlit application directly using the virtual environment's Streamlit executable:
+    From the `agents/data-analyzer-bot` directory, execute the Streamlit application using the command below. This command uses the `streamlit.exe` located inside the `.venv` directory that you created in this folder.
+
     ```bash
     # On Windows:
     .venv\Scripts\streamlit.exe run app\ai_data_analyst.py
