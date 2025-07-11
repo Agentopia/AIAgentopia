@@ -26,6 +26,26 @@ In addition to the formal Code of Conduct, we encourage all community members to
 
 ---
 
+## 🌳 Branching Strategy: Feature Branches
+
+To ensure the `main` branch remains stable and production-ready at all times, we follow a simple and effective feature branch workflow.
+
+**Core Principles:**
+
+1.  **`main` is the Source of Truth:** The `main` branch is our definitive, working version of the project. We never commit directly to it.
+2.  **Create Branches for Everything:** For any new piece of work—whether it's developing a new agent, fixing a bug, or updating documentation—create a new, descriptively named branch from the latest version of `main`.
+3.  **Use Descriptive Prefixes:** Name your branches using prefixes to keep them organized. This helps everyone understand the purpose of the branch at a glance.
+    *   **`feature/`**: For new features or agents (e.g., `feature/new-research-agent`).
+    *   **`fix/`**: For bug fixes (e.g., `fix/data-analyzer-ui-bug`).
+    *   **`docs/`**: For documentation changes (e.g., `docs/update-contributing-guide`).
+    *   **`refactor/`**: For code refactoring that doesn't add features or fix bugs.
+    *   **`chore/`**: For maintenance tasks (e.g., updating dependencies).
+4.  **Merge via Pull Request:** All changes must be merged into `main` through a Pull Request (PR). This allows for code review and discussion before changes are integrated.
+
+This workflow is already reflected in the "General Contribution Workflow" section below.
+
+---
+
 ## 🚀 General Contribution Workflow
 
 Contributing to AIAgentopia involves a few key steps, whether you're adding a new agent, fixing a bug, or improving documentation.
