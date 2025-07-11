@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# Virtualenv
+.venv/
+virtualenv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE and tool caches
+.idea/
+.vscode/
+.ruff_cache/
+.streamlit/
+
+# Environment files
+.env
+
+# Test files (not needed in production image)
+tests/
+
+# Sample data (if not needed in production image)
+sample/
