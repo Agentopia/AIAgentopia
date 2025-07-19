@@ -1,0 +1,123 @@
+{
+  "name": "AI Music Agent",
+  "icon": "🎵",
+  "emoji": "🎵",
+  "version": "1.1.0",
+  "description": "An AI-powered music generation agent with standardized Agentopia UI/UX, comprehensive configuration management, and robust error handling. Creates custom music tracks from natural language prompts using ModelsLab API and OpenAI GPT-4.",
+  "long_description": "The AI Music Agent is a comprehensive Streamlit-based application that democratizes music creation through artificial intelligence. Built with Agentopia's standardized UI/UX patterns, this agent combines the power of OpenAI's GPT-4 for intelligent prompt enhancement with ModelsLab's advanced music generation API to create high-quality MP3 audio tracks from natural language descriptions.\n\n**Key Features:**\n- **Intelligent Prompt Engineering**: Uses GPT-4 to enhance user prompts with detailed musical specifications including genre, instruments, tempo, and structure\n- **High-Quality Audio Generation**: Leverages ModelsLab's API to produce professional-grade MP3 music files\n- **User-Friendly Interface**: Features Agentopia's standardized UI with responsive design, clear navigation, and accessibility considerations\n- **Secure Configuration Management**: Supports both environment variable loading and manual API key input with comprehensive validation\n- **Privacy-First Approach**: All generated music is stored locally on the user's machine, ensuring complete data privacy\n- **Cross-Platform Compatibility**: Works seamlessly on Windows, Linux, and macOS\n\nThe agent is designed for content creators, musicians, educators, and anyone interested in exploring AI-powered music generation. Whether you need background music for videos, inspiration for compositions, or educational demonstrations of AI capabilities, this agent provides an intuitive and powerful solution.",
+  "author": "Agentopia Community",
+  "license": "MIT",
+  "tags": ["music", "generation", "ai", "creative", "audio", "streamlit", "agentopia"],
+  "category": "Content Creation & Design",
+  "subcategory": "Music Generation",
+  "agentType": "Assistant",
+  "agentScale": "Single-Agent",
+  "developmentFrameworks": ["Streamlit", "Agno", "OpenAI API", "ModelsLab API"],
+  "intendedAudience": ["Content Creators", "Musicians", "Educators", "Developers", "Creative Professionals"],
+  "dataModalities": ["Text", "Audio", "Natural Language"],
+  "integrationType": "Standalone Web Application",
+  "deployment_status": "development",
+  "privacy_level": "user-controlled",
+  "local_first": true,
+  "requires_api_keys": true,
+  "supported_platforms": ["windows", "linux", "macos"],
+  "tech_stack": {
+    "framework": "streamlit",
+    "language": "python",
+    "ai_framework": "agno",
+    "llm_provider": "openai",
+    "external_apis": ["modelslab", "openai"]
+  },
+  "features": [
+    "Text-to-music generation with AI-enhanced prompts",
+    "MP3 audio output with high-quality generation",
+    "Real-time audio playback and streaming",
+    "Audio file download and local storage",
+    "Custom prompt engineering and optimization",
+    "Comprehensive error handling and validation",
+    "Standardized Agentopia UI/UX with responsive design",
+    "Environment variable configuration management",
+    "API key validation with user-friendly feedback",
+    "Fallback configuration system (.env + manual input)",
+    "Cross-platform compatibility and accessibility",
+    "Privacy-first local file storage"
+  ],
+  "requirements": [
+    "Python >=3.8",
+    "agno==1.2.8",
+    "requests==2.32.3",
+    "streamlit==1.44.1",
+    "openai",
+    "python-dotenv==1.0.0"
+  ],
+  "api_keys": [
+    {
+      "name": "OpenAI API Key",
+      "description": "Required for GPT-4 model access",
+      "provider": "OpenAI",
+      "required": true,
+      "input_method": "environment_variable_or_user_input",
+      "env_variable": "OPENAI_API_KEY",
+      "validation": "Format validation with user feedback"
+    },
+    {
+      "name": "ModelsLab API Key",
+      "description": "Required for music generation API access",
+      "provider": "ModelsLab",
+      "required": true,
+      "input_method": "environment_variable_or_user_input",
+      "env_variable": "MODELSLAB_API_KEY",
+      "validation": "Format validation with user feedback"
+    }
+  ],
+  "entry_point": "app/music_generator.py",
+  "docker_image_name": "agentopia/ai-music-agent",
+  "docker_pull_instructions": "docker pull agentopia/ai-music-agent:latest",
+  "docker_run_instructions": "```bash\ndocker run -d --name ai-music-agent -p 8501:8501 agentopia/ai-music-agent:latest\n```",
+  "setup_instructions": "1. Clone the repository\n2. Install Python 3.8+ and pip\n3. Install dependencies: pip install -r requirements.txt\n4. Create .env file with API keys (see .env.example)\n5. Run: streamlit run app/music_generator.py\n6. Open http://localhost:8501 in your browser\n7. Enter your API keys and start generating music!",
+  "demo_url": "https://huggingface.co/spaces/agentopia/ai-music-agent",
+  "source_url": "https://github.com/Agentopia/AIAgentopia/tree/main/agents/ai-music-agent",
+  "use_cases": [
+    "Creative music composition for content creators",
+    "Background music generation for videos and presentations",
+    "Musical inspiration and experimentation for musicians",
+    "Educational tool for understanding AI music generation",
+    "Rapid prototyping of musical ideas and concepts"
+  ],
+  "privacy_considerations": "This agent prioritizes user privacy by storing all generated music files locally on your machine. API keys are managed through secure environment variables or manual input with validation. No user data or generated content is shared with third parties beyond the necessary API calls to OpenAI and ModelsLab for music generation. All audio files remain under your complete control and ownership.",
+  "llm_dependency": {
+    "required": true,
+    "type": "openai",
+    "apiKeyEnvVar": "OPENAI_API_KEY",
+    "providers": ["openai"],
+    "models": ["gpt-4o"],
+    "purpose": "Enhanced prompt engineering for music generation"
+  },
+  "usage": {
+    "entry_point": "app/music_generator.py",
+    "command": "streamlit run app/music_generator.py",
+    "port": 8501,
+    "interface": "web"
+  },
+  "outputs": {
+    "primary": "MP3 audio files",
+    "storage": "local filesystem",
+    "formats": ["mp3"]
+  },
+  "limitations": [
+    "Requires internet connection for API access",
+    "Depends on external service availability",
+    "API rate limits may apply",
+    "Generated music quality depends on prompt specificity"
+  ],
+  "roadmap": [
+    "Complete testing framework implementation",
+    "Add inline code documentation and comments",
+    "Implement local LLM support (Ollama integration)",
+    "Add batch music generation capabilities",
+    "Create music style templates and presets",
+    "Implement Docker containerization",
+    "Add advanced audio format support (WAV, FLAC)",
+    "Create comprehensive user documentation"
+  ]
+}
