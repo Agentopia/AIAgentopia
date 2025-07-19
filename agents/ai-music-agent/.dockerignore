@@ -1,0 +1,73 @@
+# AI Music Agent .dockerignore
+# Exclude unnecessary files from Docker build context
+
+# Environment files (will be mounted at runtime)
+.env
+.env.local
+.env.development
+.env.production
+
+# Generated music files (will be mounted as volume)
+generated_music/
+audio_generations/
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git files
+.git/
+.gitignore
+
+# Documentation and development files
+docs/
+LICENSE
+.github/
+
+# Exclude specific markdown files but keep README.md
+DOCKER.md
+
+# Test files
+test_*.py
+tests/
+*_test.py
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if any)
+node_modules/
+
+# Coverage reports
+htmlcov/
+.coverage
+.pytest_cache/
