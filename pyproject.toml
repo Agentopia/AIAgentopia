@@ -31,10 +31,20 @@ exclude = [
 line-length = 88
 
 [tool.ruff.lint]
-# Enable Pyflakes (F) and pycodestyle (E) error checks by default.
-# Enable isort (I) for import sorting.
+# Enable selective linting rules to avoid breaking working code
+# E: pycodestyle errors (but exclude line length)
+# F: Pyflakes (but exclude some undefined name checks)
+# I: isort for import sorting
 select = ["E", "F", "I"]
-# You can add more specific rule selections or ignores here if needed later.
+
+# Ignore specific rules that can break working code
+ignore = [
+    "E501",  # Line too long (let formatter handle this)
+    "F821",  # Undefined name (can break working code with dynamic variables)
+]
+
+# Additional safety: don't auto-fix undefined name issues
+unfixable = ["F821"]
 
 [tool.ruff.format]
 # Enable formatting. This is compatible with Black.

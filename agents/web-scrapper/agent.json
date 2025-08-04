@@ -1,0 +1,111 @@
+{
+  "name": "web-scraper",
+  "display_name": "Web Scraper Agent",
+  "version": "1.0.0",
+  "description": "A unified intelligent web scraping agent with dual LLM support that extracts specific information from websites using natural language prompts.",
+  "long_description": "The Web Scraper Agent is a production-ready, unified application that combines AI language models with advanced web scraping capabilities. It features a clean Streamlit interface with dynamic provider selection between cloud-based OpenAI and privacy-focused local Ollama deployments. The agent uses intelligent error handling, memory-efficient model support, and professional Agentopia branding to deliver enterprise-grade web scraping functionality.",
+  "category": "Data Analysis & Research",
+  "subcategory": "Web Scraping",
+  "agentType": "Assistant",
+  "agentScale": "Single-Agent",
+  "tags": [
+    "web-scraping",
+    "data-extraction",
+    "ai-powered",
+    "streamlit",
+    "openai",
+    "ollama",
+    "playwright",
+    "scrapegraphai"
+  ],
+  "author": "Agentopia Team",
+  "license": "MIT",
+  "homepage": "https://github.com/Agentopia/AIAgentopia",
+  "repository": "https://github.com/Agentopia/AIAgentopia",
+  "documentation": "https://agentopia.github.io/agents/web-scraper",
+  "entry_point": "app/web_scraper.py",
+  "use_cases": [
+    "Extract product information from e-commerce websites",
+    "Gather news articles and content from media sites",
+    "Collect research data from academic or professional websites",
+    "Monitor competitor pricing and product details",
+    "Scrape job listings from career websites",
+    "Extract contact information from business directories"
+  ],
+  "privacy_considerations": "The Web Scraper Agent prioritizes user privacy by offering local Ollama deployment options that keep all data processing on the user's machine. When using OpenAI, API keys are handled securely and users maintain full control over their credentials. The agent respects robots.txt files and website terms of service. All scraped data remains under user control and is not stored or transmitted beyond the user's specified configuration.",
+  "features": [
+    "Unified application with dynamic LLM provider selection",
+    "Dual LLM support (OpenAI API and local Ollama)",
+    "Professional Agentopia branding and UI",
+    "Natural language scraping prompts",
+    "Intelligent content extraction with direct Ollama integration",
+    "Memory-efficient model support (llama3.2:1b)",
+    "Smart error handling and troubleshooting guidance",
+    "Auto-loading of API keys from environment",
+    "Clean Streamlit web interface",
+    "Environment-based configuration",
+    "Privacy-focused local deployment option"
+  ],
+  "requirements": [
+    "Python >=3.8",
+    "512MB RAM minimum",
+    "100MB storage space",
+    "Internet connection for web scraping and API access",
+    "OpenAI API key (for cloud LLM) or Ollama installation (for local LLM)"
+  ],
+  "docker_image_name": "agentopia/web-scraper-agent",
+  "docker_run_instructions": "```bash\n# Basic run command\ndocker run -d --name web-scraper-agent -p 8501:8501 agentopia/web-scraper-agent:latest\n\n# With environment variables\ndocker run -d --name web-scraper-agent -p 8501:8501 \\\n  -e OPENAI_API_KEY=your_api_key_here \\\n  agentopia/web-scraper-agent:latest\n\n# With volume mounting for persistent data\ndocker run -d --name web-scraper-agent -p 8501:8501 \\\n  -v $(pwd)/.env:/app/.env \\\n  agentopia/web-scraper-agent:latest\n```",
+  "llm_dependency": {
+    "required": true,
+    "type": "openai",
+    "apiKeyEnvVar": "OPENAI_API_KEY",
+    "providers": [
+      {
+        "name": "OpenAI",
+        "models": ["gpt-3.5-turbo", "gpt-4"],
+        "api_key_required": true,
+        "local": false
+      },
+      {
+        "name": "Ollama",
+        "models": ["llama3.2:1b", "llama3.2", "llama3.1:8b", "gemma2:2b"],
+        "api_key_required": false,
+        "local": true,
+        "setup_url": "https://ollama.ai/"
+      }
+    ],
+    "fallback_strategy": "User can switch between OpenAI API and local Ollama deployment"
+  },
+  "usage": {
+    "input_format": "Website URL and natural language description of data to extract",
+    "output_format": "Extracted data in JSON or text format",
+    "interface": "Streamlit web application"
+  },
+  "deployment_status": "production",
+  "maturity_level": "Stable",
+  "last_updated": "2025-08-04",
+  "roadmap": {
+    "current_phase": "Phase 1: Complete - Production Ready",
+    "completed_milestones": [
+      "✅ Merged dual LLM implementations into unified app",
+      "✅ Implemented Agentopia UI standards and branding",
+      "✅ Added comprehensive error handling and UX improvements",
+      "✅ Direct Ollama integration for reliability",
+      "✅ Memory-efficient model support"
+    ],
+    "next_milestones": [
+      "Docker containerization",
+      "Documentation finalization",
+      "Advanced anti-bot measures",
+      "Automated testing suite"
+    ]
+  },
+  "technical_details": {
+    "framework": "Streamlit",
+    "backend": "Python",
+    "scraping_engine": "Playwright + scrapegraphai",
+    "architecture": "Single agent with configurable LLM backend",
+    "memory_management": "Stateless, session-based",
+    "security": "API key validation, input sanitization"
+  }
+}
