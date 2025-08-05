@@ -1,6 +1,7 @@
 {
-  "name": "web-scraper",
-  "display_name": "Web Scraper Agent",
+  "name": "Web Scraper Agent",
+  "icon": "🕵️‍♂️",
+  "emoji": "🕵️‍♂️",
   "version": "1.1.0",
   "description": "A unified intelligent web scraping agent with dual LLM support that extracts specific information from websites using natural language prompts.",
   "long_description": "The Web Scraper Agent is a production-ready, unified application that combines AI language models with advanced web scraping capabilities. It features a clean Streamlit interface with dynamic provider selection between cloud-based OpenAI and privacy-focused local Ollama deployments. The agent uses intelligent error handling, memory-efficient model support, and professional Agentopia branding to deliver enterprise-grade web scraping functionality.",
@@ -54,8 +55,9 @@
     "OpenAI API key (for cloud LLM) or Ollama installation (for local LLM)"
   ],
   "docker_image_name": "agentopia/web-scraper-agent",
-  "docker_run_instructions": "### Simple Command (Recommended)\nThis is the simplest way to get the agent running. After launching, you can enter your API key in the web interface.\n```bash\ndocker run -d --name web-scraper-agent -p 8501:8501 agentopia/web-scraper-agent:latest\n```\n\n### Advanced Command (with Persistent API Key)\nFor convenience, you can mount your local `.env` file to securely provide your API key.\n```bash\ndocker run -d --name web-scraper-agent -p 8501:8501 -v /path/to/your/.env:/app/.env agentopia/web-scraper-agent:latest\n```",
-
+  "docker_run_instructions": "```bash\ndocker run -d --name web-scraper-agent -p 8501:8501 agentopia/web-scraper-agent:latest\n```",
+  "setup_instructions": "1. Clone the repository.\n2. Navigate to the `AIAgentopia/agents/web-scraper` directory.\n3. Install dependencies: `pip install -r requirements.txt`\n4. Create a `.env` file and add your `OPENAI_API_KEY` if you plan to use the OpenAI provider.\n5. Run the agent: `streamlit run app/web_scraper.py`\n6. Open http://localhost:8501 in your browser to use the agent.",
+  "source_url": "https://github.com/Agentopia/AIAgentopia/tree/main/agents/web-scraper",
   "llm_dependency": {
     "required": true,
     "type": "openai",
