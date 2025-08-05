@@ -1,7 +1,7 @@
 {
   "name": "web-scraper",
   "display_name": "Web Scraper Agent",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A unified intelligent web scraping agent with dual LLM support that extracts specific information from websites using natural language prompts.",
   "long_description": "The Web Scraper Agent is a production-ready, unified application that combines AI language models with advanced web scraping capabilities. It features a clean Streamlit interface with dynamic provider selection between cloud-based OpenAI and privacy-focused local Ollama deployments. The agent uses intelligent error handling, memory-efficient model support, and professional Agentopia branding to deliver enterprise-grade web scraping functionality.",
   "category": "Data Analysis & Research",
@@ -32,7 +32,7 @@
     "Scrape job listings from career websites",
     "Extract contact information from business directories"
   ],
-  "privacy_considerations": "The Web Scraper Agent prioritizes user privacy by offering local Ollama deployment options that keep all data processing on the user's machine. When using OpenAI, API keys are handled securely and users maintain full control over their credentials. The agent respects robots.txt files and website terms of service. All scraped data remains under user control and is not stored or transmitted beyond the user's specified configuration.",
+  "privacy_considerations": "The Web Scraper Agent prioritizes user privacy by offering local Ollama deployment options that keep all data processing on the user's machine. When using OpenAI, API keys are handled securely and users maintain full control over their credentials. If an API key is not provided via an environment variable, the agent will prompt the user to enter it in the application, ensuring keys are never stored in the container. The agent respects robots.txt files and website terms of service. All scraped data remains under user control and is not stored or transmitted beyond the user's specified configuration.",
   "features": [
     "Unified application with dynamic LLM provider selection",
     "Dual LLM support (OpenAI API and local Ollama)",
@@ -54,7 +54,8 @@
     "OpenAI API key (for cloud LLM) or Ollama installation (for local LLM)"
   ],
   "docker_image_name": "agentopia/web-scraper-agent",
-  "docker_run_instructions": "```bash\n# Basic run command\ndocker run -d --name web-scraper-agent -p 8501:8501 agentopia/web-scraper-agent:latest\n\n# With environment variables\ndocker run -d --name web-scraper-agent -p 8501:8501 \\\n  -e OPENAI_API_KEY=your_api_key_here \\\n  agentopia/web-scraper-agent:latest\n\n# With volume mounting for persistent data\ndocker run -d --name web-scraper-agent -p 8501:8501 \\\n  -v $(pwd)/.env:/app/.env \\\n  agentopia/web-scraper-agent:latest\n```",
+  "docker_run_instructions": "### Simple Command (Recommended)\nThis is the simplest way to get the agent running. After launching, you can enter your API key in the web interface.\n```bash\ndocker run -d --name web-scraper-agent -p 8501:8501 agentopia/web-scraper-agent:latest\n```\n\n### Advanced Command (with Persistent API Key)\nFor convenience, you can mount your local `.env` file to securely provide your API key.\n```bash\ndocker run -d --name web-scraper-agent -p 8501:8501 -v /path/to/your/.env:/app/.env agentopia/web-scraper-agent:latest\n```",
+
   "llm_dependency": {
     "required": true,
     "type": "openai",
@@ -91,10 +92,10 @@
       "✅ Implemented Agentopia UI standards and branding",
       "✅ Added comprehensive error handling and UX improvements",
       "✅ Direct Ollama integration for reliability",
-      "✅ Memory-efficient model support"
+      "✅ Memory-efficient model support",
+      "✅ Docker containerization"
     ],
     "next_milestones": [
-      "Docker containerization",
       "Documentation finalization",
       "Advanced anti-bot measures",
       "Automated testing suite"

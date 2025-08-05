@@ -111,7 +111,13 @@ class OllamaProvider(LLMProvider):
 
     def __init__(self):
         super().__init__("Ollama")
-        self.base_url = "http://localhost:11434"
+        # Use host.docker.internal if running in Docker, otherwise localhost
+        docker_host = "host.docker.internal"
+        self.base_url = (
+            f"http://{docker_host}:11434"
+            if os.getenv("RUNNING_IN_DOCKER")
+            else "http://localhost:11434"
+        )
         # Include memory-efficient model variants
         self.default_models = ["llama3.2:1b", "llama3.2", "llama3.1:8b", "gemma2:2b"]
         self.embedding_model = "nomic-embed-text"
@@ -216,9 +222,15 @@ def sanitize_prompt(prompt: str) -> str:
     return sanitized
 
 
-def scrape_with_direct_ollama(
-    url: str, prompt: str, model: str, base_url: str = "http://localhost:11434"
-) -> Dict:
+def scrape_with_direct_ollama(url: str, prompt: str, model: str) -> Dict:
+    """Direct Ollama integration for web scraping (bypasses scrapegraphai)"""
+    # Determine base URL based on environment
+    docker_host = "host.docker.internal"
+    base_url = (
+        f"http://{docker_host}:11434"
+        if os.getenv("RUNNING_IN_DOCKER")
+        else "http://localhost:11434"
+    )
     """Direct Ollama integration for web scraping (bypasses scrapegraphai)"""
     try:
         # Step 1: Scrape the website content using Playwright
@@ -522,7 +534,6 @@ def main():
                         url=clean_url,
                         prompt=clean_prompt,
                         model=selected_model,
-                        base_url=ollama_provider.base_url,
                     )
 
                     if result["success"]:
