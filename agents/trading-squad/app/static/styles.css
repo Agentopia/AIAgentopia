@@ -1,0 +1,379 @@
+/*
+ * Trading Squad Streamlit UI Styles
+ * Optimized for performance and maintainability
+ * Last updated: August 11, 2025 - Step 2: CSS Optimization
+ */
+
+/* ===== CSS CUSTOM PROPERTIES (THEME VARIABLES) ===== */
+:root {
+    /* Color Palette */
+    --primary-blue: #007bff;
+    --primary-blue-dark: #0056b3;
+    --success-green: #28a745;
+    --warning-yellow: #ffc107;
+    --info-cyan: #17a2b8;
+    --danger-red: #dc3545;
+
+    /* Neutral Colors */
+    --white: #ffffff;
+    --light-gray: #f8f9fa;
+    --medium-gray: #e0e0e0;
+    --dark-gray: #333333;
+    --button-dark: #2b2f36;
+    --button-darker: #23272c;
+    --text-light: #dfe3e6;
+
+    /* Status Colors */
+    --status-pending-bg: #fff3cd;
+    --status-pending-text: #856404;
+    --status-running-bg: #d1ecf1;
+    --status-running-text: #0c5460;
+    --status-complete-bg: #d4edda;
+    --status-complete-text: #155724;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --radius-xl: 15px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+    --shadow-lg: 0 4px 15px rgba(0,0,0,0.1);
+    --shadow-xl: 0 8px 25px rgba(0,0,0,0.15);
+    --shadow-glow: 0 0 15px rgba(0, 123, 255, 0.6);
+    --shadow-glow-intense: 0 0 30px rgba(0, 123, 255, 1.0);
+
+    /* Animation Timing */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --animation-pulse: 1s infinite;
+    --animation-glow: 2s infinite;
+}
+
+/* ===== MAIN HEADER STYLES ===== */
+.main-header {
+    text-align: center;
+    padding: 0.75rem var(--spacing-md);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: var(--white);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-md);
+}
+
+.main-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    line-height: 1.2;
+}
+
+.main-header h3 {
+    margin: var(--spacing-xs) 0 0 0;
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+.main-header p {
+    margin: var(--spacing-xs) 0 0 0;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* ===== AGENT STATUS CARDS ===== */
+.agent-status-card {
+    background: var(--light-gray);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--success-green);
+    margin: var(--spacing-sm) 0;
+    box-shadow: var(--shadow-sm);
+    color: var(--dark-gray);
+    transition: var(--transition-normal);
+}
+
+/* Status-specific styles using CSS variables */
+.agent-status-pending {
+    border-left-color: var(--warning-yellow);
+    background: var(--status-pending-bg);
+    color: var(--status-pending-text);
+}
+
+.agent-status-running {
+    border-left-color: var(--info-cyan);
+    background: var(--status-running-bg);
+    color: var(--status-running-text);
+}
+
+.agent-status-complete {
+    border-left-color: var(--success-green);
+    background: var(--status-complete-bg);
+    color: var(--status-complete-text);
+}
+
+/* ===== RESULT CONTAINERS ===== */
+.result-container {
+    background: var(--white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--medium-gray);
+    margin: var(--spacing-md) 0;
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition-normal);
+}
+
+.metric-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: var(--white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    margin: var(--spacing-sm);
+    transition: var(--transition-normal);
+}
+
+.analysis-progress {
+    background: var(--light-gray);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+}
+
+/* ===== STREAMLIT BUTTON BASELINE ===== */
+/* Consolidated neutral baseline for all Streamlit buttons */
+.stButton > button,
+[data-testid^="baseButton"] {
+    background: linear-gradient(135deg, var(--button-dark) 0%, var(--button-darker) 100%) !important;
+    color: var(--text-light) !important;
+    border: none !important;
+    border-radius: var(--radius-lg) !important;
+    padding: 0.75rem var(--spacing-xl) !important;
+    font-weight: bold !important;
+    transition: all var(--transition-normal) !important;
+    box-shadow: none !important;
+}
+
+/* Consolidated hover, active, and focus states */
+.stButton > button:hover,
+.stButton > button:active,
+.stButton > button:focus-visible,
+[data-testid^="baseButton"]:hover,
+[data-testid^="baseButton"]:active,
+[data-testid^="baseButton"]:focus-visible {
+    background: linear-gradient(135deg, var(--button-dark) 0%, var(--button-darker) 100%) !important;
+    color: var(--text-light) !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: translateY(-2px);
+}
+
+/* ===== LAYOUT AND COLUMN ADJUSTMENTS ===== */
+/* Remove column padding and gaps to align main content with header */
+.stColumn:first-child {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.stColumn:first-child > div {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Eliminate gap between columns */
+.stColumn {
+    gap: 0 !important;
+}
+
+/* Force main content column to take maximum available width */
+.stColumn:first-child {
+    flex: 1 !important;
+    max-width: calc(100% - 250px) !important;
+}
+
+/* Fix agent status column width */
+.stColumn:last-child {
+    flex: 0 0 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+}
+
+/* Full width container for perfect alignment */
+.full-width-container {
+    margin-left: calc(-1 * var(--padding-left, 1rem)) !important;
+    margin-right: calc(-1 * var(--padding-right, 1rem)) !important;
+    padding-left: var(--padding-left, 1rem) !important;
+    padding-right: var(--padding-right, 1rem) !important;
+    width: calc(100% + 2 * var(--padding-left, 1rem)) !important;
+}
+
+/* Override Streamlit's main container padding */
+.main .block-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: none !important;
+}
+
+/* Ensure columns start at true left edge */
+.stColumn:first-child {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+/* ===== OPTIMIZED ANIMATIONS AND KEYFRAMES ===== */
+/* Optimized pulse animation using CSS variables */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1.02);
+        box-shadow: var(--shadow-glow);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 25px rgba(0, 123, 255, 0.9);
+    }
+}
+
+/* Optimized glow animation using CSS variables */
+@keyframes glow {
+    0%, 100% {
+        box-shadow: var(--shadow-glow);
+        border-color: var(--primary-blue);
+    }
+    50% {
+        box-shadow: var(--shadow-glow-intense);
+        border-color: var(--primary-blue-dark);
+    }
+}
+
+/* Utility spin animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== AGENT BUTTON STATUS STYLES ===== */
+/* Style agent buttons based on the class of their container div */
+.agent-running .stButton > button,
+.agent-running [data-testid^="baseButton"] {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%) !important;
+    animation: pulse var(--animation-pulse) !important;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.agent-completed .stButton > button,
+.agent-completed [data-testid^="baseButton"] {
+    background: linear-gradient(135deg, var(--success-green) 0%, #1e7e34 100%) !important;
+}
+
+.agent-error .stButton > button,
+.agent-error [data-testid^="baseButton"] {
+    background: linear-gradient(135deg, var(--danger-red) 0%, #a71d2a 100%) !important;
+}
+
+
+/* ===== RUNNING AGENT ANIMATIONS ===== */
+/* Consolidated running agent animation styles */
+.stButton > button[kind="primary"],
+button[data-testid="baseButton-primary"] {
+    animation: pulse var(--animation-pulse), glow var(--animation-glow) !important;
+    border: 3px solid var(--primary-blue) !important;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%) !important;
+    box-shadow: var(--shadow-glow) !important;
+    transform: scale(1.02) !important;
+}
+
+/* ===== ACTIVITY INDICATORS ===== */
+.activity-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: var(--radius-md);
+    transition: var(--transition-normal);
+}
+
+/* Activity status styles using CSS variables */
+.activity-running {
+    background: var(--primary-blue);
+    animation: pulse 1.5s infinite;
+}
+
+.activity-complete {
+    background: var(--success-green);
+}
+
+.activity-pending {
+    background: var(--warning-yellow);
+}
+
+/* Progress animation using CSS variables */
+.progress-animated {
+    animation: pulse var(--animation-glow);
+}
+
+/* ===== AGENT MODAL STYLING ===== */
+.agent-modal {
+    background: var(--white);
+    border: 2px solid var(--primary-blue);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md) 0;
+    box-shadow: var(--shadow-xl);
+    transition: var(--transition-normal);
+}
+
+/* ===== STREAMING CONTAINER ===== */
+.streaming-container {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--medium-gray);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    background: var(--light-gray);
+    margin: var(--spacing-md) 0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.streaming-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.streaming-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.streaming-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.streaming-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.streaming-message {
+    margin: var(--spacing-sm) 0;
+    padding: 0.75rem;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary-blue);
+    box-shadow: var(--shadow-sm);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    transition: var(--transition-fast);
+}
