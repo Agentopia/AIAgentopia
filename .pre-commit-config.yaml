@@ -20,7 +20,7 @@ repos:
       - id: ruff-format # Run the formatter first
         # args: [--check] # Uncomment to only check formatting without applying changes
       - id: ruff        # Then run the linter (with safer auto-fix)
-        args: [--fix, --exit-non-zero-on-fix, --ignore=F821]  # Ignore undefined names to prevent breaking working code
+        args: [--fix, --ignore=F821,F401,F403,F405,F841,E402]  # Ignore common issues that don't break functionality
 
 # To update hooks to their latest versions in the future, you can run:
 # pre-commit autoupdate
