@@ -9,6 +9,9 @@ import sys
 import time
 from collections import deque
 from datetime import date, datetime, timedelta
+import urllib.request
+import urllib.parse
+import re
 
 import streamlit as st
 
@@ -37,7 +40,7 @@ try:
     )
     from components.css_loader import load_css
     from components.header_component import render_header
-    from components.report_components import render_analysis_report
+    from components.report_components import render_analysis_report, build_partial_report_md
     from components.sidebar_config import render_sidebar_configuration
 
     COMPONENTS_AVAILABLE = True
@@ -189,6 +192,18 @@ def init_session_state():
             "trader_investment_plan": None,
             "final_trade_decision": None,
         }
+
+    # Preflight symbol resolution states
+    if "preflight_pending" not in st.session_state:
+        st.session_state.preflight_pending = False
+    if "preflight_profile" not in st.session_state:
+        st.session_state.preflight_profile = None
+    if "resolved_profile" not in st.session_state:
+        st.session_state.resolved_profile = None
+    if "pending_symbol" not in st.session_state:
+        st.session_state.pending_symbol = None
+    if "mismatch_warned_sections" not in st.session_state:
+        st.session_state.mismatch_warned_sections = set()
 
 
 # Fallback UI components
@@ -544,9 +559,60 @@ Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"""
     return summary
 
 
+def fetch_company_profile(symbol: str) -> dict:
+    """Fetch company profile for a ticker using Finnhub if configured.
+
+    Returns a dict with keys like: name, ticker, exchange, country, finnhubIndustry, weburl, ipo, logo, marketCapitalization, shareOutstanding.
+    If no API key configured or request fails, returns an empty dict.
+    """
+    token = os.getenv("FINNHUB_API_KEY", "").strip()
+    if not token or not symbol:
+        return {}
+    try:
+        base = "https://finnhub.io/api/v1/stock/profile2"
+        params = urllib.parse.urlencode({"symbol": symbol.upper(), "token": token})
+        url = f"{base}?{params}"
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+            # Finnhub returns {} for unknown symbols
+            if isinstance(data, dict) and data:
+                return data
+            return {}
+    except Exception:
+        return {}
+
+
+def validate_and_correct_section(text: str, company_name: str | None, symbol: str) -> tuple[str, bool]:
+    """Validate section text mentions the resolved company; lightly correct common header formats.
+
+    Returns (corrected_text, is_consistent).
+    is_consistent is True if the text likely refers to the resolved company.
+    """
+    if not text:
+        return text, True
+    if not company_name:
+        return text, True
+
+    lower = text.lower()
+    consistent = company_name.lower() in lower
+
+    # Try to fix a common header like: "Comprehensive Report on CRCL (Other Name)"
+    # Replace parenthetical company with the resolved one when symbol matches
+    header_pattern = rf"^(.*?\b{re.escape(symbol)}\s*\()(.*?)(\))"
+    def _repl(m):
+        return f"{m.group(1)}{company_name}{m.group(3)}"
+
+    corrected = re.sub(header_pattern, _repl, text, count=1, flags=re.IGNORECASE | re.MULTILINE)
+    # After correction, deem consistent if company name now present
+    if company_name.lower() in corrected.lower():
+        consistent = True
+    return corrected, consistent
+
+
 def run_real_analysis(
     stock_symbol: str,
     analysis_date: date,
+    analysis_params: dict,
     llm_config: dict,
     selected_analysts: list,
     debug_mode: bool,
@@ -570,6 +636,10 @@ def run_real_analysis(
         progress_bar = st.progress(0)
         status_text = st.empty()
 
+        # Run configuration summary placeholder
+        st.markdown("### ⚙️ Run Configuration")
+        run_config_placeholder = st.empty()
+
         st.markdown("### 💬 Live Analysis Feed")
         messages_container = st.empty()
 
@@ -581,20 +651,46 @@ def run_real_analysis(
 
     # Configure TradingAgents - matching CLI config
     config = DEFAULT_CONFIG.copy()
+
+    # Determine model selection based on depth and sidebar choices
+    depth_choice = analysis_params.get("depth_choice", "Standard")
+    quick_model = llm_config.get("quick_think_model")
+    deep_model = llm_config.get("deep_think_model")
+    chosen_model = (
+        deep_model
+        if depth_choice == "Deep"
+        else (quick_model or deep_model or llm_config.get("model", "gpt-4o"))
+    )
+
+    backend_url = llm_config.get("backend_url") or None
+
     config["llm_config"] = {
         "provider": llm_config.get("provider", "OpenAI").lower(),
         "config_list": [
             {
-                "model": llm_config.get("model", "gpt-4o"),
-                "base_url": llm_config.get("backend_url")
-                if llm_config.get("backend_url")
-                else None,
+                "model": chosen_model,
+                "base_url": backend_url,
             }
         ],
         "temperature": 0.1,
     }
-    config["research_depth"] = "deep"
+
+    # Map UI depth to backend research depth
+    depth_map = {"Beginner": "shallow", "Standard": "balanced", "Deep": "deep"}
+    if depth_choice == "Custom":
+        total_rounds = (
+            int(analysis_params.get("max_debate_rounds", 2))
+            + int(analysis_params.get("max_risk_rounds", 2))
+        )
+        research_depth = "deep" if total_rounds >= 5 else "balanced"
+    else:
+        research_depth = depth_map.get(depth_choice, "balanced")
+    config["research_depth"] = research_depth
     config["online_tools"] = True
+
+    # Attach resolved profile from preflight if available
+    if st.session_state.get("resolved_profile"):
+        config["company_profile"] = st.session_state.get("resolved_profile")
 
     # Map selected analysts to TradingAgents format
     analyst_mapping = {
@@ -616,6 +712,22 @@ def run_real_analysis(
             selected_analysts=mapped_analysts, debug=debug_mode, config=config
         )
 
+        # Run configuration summary
+        provider = config.get("llm_config", {}).get("provider")
+        model = (config.get("llm_config", {}).get("config_list") or [{}])[0].get("model")
+        base_url = (config.get("llm_config", {}).get("config_list") or [{}])[0].get("base_url")
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        st.session_state.progress_messages.appendleft(
+            f"{timestamp} - Provider: {provider} | Model: {model} | Base URL: {base_url or 'default'}"
+        )
+        # Immediately render a visible run configuration panel
+        run_config_md = (
+            f"- **Provider:** `{provider}`\n"
+            f"- **Model:** `{model}`\n"
+            f"- **Base URL:** `{base_url or 'default'}`"
+        )
+        run_config_placeholder.info(run_config_md)
+
         status_text.text("🚀 Starting analysis...")
         date_str = analysis_date.strftime("%Y-%m-%d")
 
@@ -634,6 +746,12 @@ def run_real_analysis(
         st.session_state.progress_messages.appendleft(
             f"{timestamp} - Selected analysts: {', '.join(mapped_analysts)}"
         )
+
+        # Show the most recent messages immediately (before streaming starts)
+        initial_msgs = []
+        for msg in list(st.session_state.progress_messages)[:10]:
+            initial_msgs.append(f"- {msg}")
+        messages_container.markdown("\n".join(initial_msgs))
 
         # Set first analyst to in_progress
         if mapped_analysts:
@@ -731,9 +849,20 @@ def run_real_analysis(
 
                 # Analyst Team Reports
                 if "market_report" in chunk and chunk["market_report"]:
-                    st.session_state.report_sections["market_report"] = chunk[
-                        "market_report"
-                    ]
+                    content = chunk["market_report"]
+                    company_name = None
+                    if st.session_state.get("resolved_profile"):
+                        company_name = st.session_state["resolved_profile"].get("name")
+                    corrected, ok = validate_and_correct_section(
+                        content, company_name, stock_symbol
+                    ) if company_name else (content, True)
+                    st.session_state.report_sections["market_report"] = corrected
+                    if not ok and "market_report" not in st.session_state.mismatch_warned_sections:
+                        ts = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{ts} [WARN] Company identity mismatch detected in Market Analysis — adjusted header."
+                        )
+                        st.session_state.mismatch_warned_sections.add("market_report")
                     update_agent_status("Market Analyst", "completed")
                     # Set next analyst to in_progress
                     # Check if social analyst is selected using correct format
@@ -754,9 +883,20 @@ def run_real_analysis(
                         st.session_state.progress_messages.appendleft(
                             f"{timestamp} [DEBUG] Received sentiment_report chunk"
                         )
-                    st.session_state.report_sections["sentiment_report"] = chunk[
-                        "sentiment_report"
-                    ]
+                    content = chunk["sentiment_report"]
+                    company_name = None
+                    if st.session_state.get("resolved_profile"):
+                        company_name = st.session_state["resolved_profile"].get("name")
+                    corrected, ok = validate_and_correct_section(
+                        content, company_name, stock_symbol
+                    ) if company_name else (content, True)
+                    st.session_state.report_sections["sentiment_report"] = corrected
+                    if not ok and "sentiment_report" not in st.session_state.mismatch_warned_sections:
+                        ts = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{ts} [WARN] Company identity mismatch detected in Social Sentiment — adjusted header."
+                        )
+                        st.session_state.mismatch_warned_sections.add("sentiment_report")
                     update_agent_status("Social Analyst", "completed")
                     # Set next analyst to in_progress
                     selected_analyst_names = [
@@ -771,9 +911,20 @@ def run_real_analysis(
                             )
 
                 if "news_report" in chunk and chunk["news_report"]:
-                    st.session_state.report_sections["news_report"] = chunk[
-                        "news_report"
-                    ]
+                    content = chunk["news_report"]
+                    company_name = None
+                    if st.session_state.get("resolved_profile"):
+                        company_name = st.session_state["resolved_profile"].get("name")
+                    corrected, ok = validate_and_correct_section(
+                        content, company_name, stock_symbol
+                    ) if company_name else (content, True)
+                    st.session_state.report_sections["news_report"] = corrected
+                    if not ok and "news_report" not in st.session_state.mismatch_warned_sections:
+                        ts = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{ts} [WARN] Company identity mismatch detected in News Analysis — adjusted header."
+                        )
+                        st.session_state.mismatch_warned_sections.add("news_report")
                     update_agent_status("News Analyst", "completed")
                     # Set next analyst to in_progress
                     selected_analyst_names = [
@@ -783,23 +934,43 @@ def run_real_analysis(
                         update_agent_status("Fundamentals Analyst", "in_progress")
 
                 if "fundamentals_report" in chunk and chunk["fundamentals_report"]:
-                    st.session_state.report_sections["fundamentals_report"] = chunk[
-                        "fundamentals_report"
-                    ]
+                    content = chunk["fundamentals_report"]
+                    company_name = None
+                    if st.session_state.get("resolved_profile"):
+                        company_name = st.session_state["resolved_profile"].get("name")
+                    corrected, ok = validate_and_correct_section(
+                        content, company_name, stock_symbol
+                    ) if company_name else (content, True)
+                    st.session_state.report_sections["fundamentals_report"] = corrected
+                    if not ok and "fundamentals_report" not in st.session_state.mismatch_warned_sections:
+                        ts = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{ts} [WARN] Company identity mismatch detected in Fundamentals — adjusted header."
+                        )
+                        st.session_state.mismatch_warned_sections.add("fundamentals_report")
                     update_agent_status("Fundamentals Analyst", "completed")
                     # Set all research team members to in_progress
                     update_research_team_status("in_progress")
 
-                # Update progress
+                # Update partial report after any analyst section change
+                report_container.markdown(
+                    build_partial_report_md(st.session_state.report_sections)
+                )
+
+                # Update progress (reflect in-progress work for better UX)
                 completed_count = sum(
-                    1
-                    for s in st.session_state.agent_status.values()
-                    if s == "completed"
+                    1 for s in st.session_state.agent_status.values() if s == "completed"
+                )
+                in_progress_count = sum(
+                    1 for s in st.session_state.agent_status.values() if s == "in_progress"
                 )
                 total_agents = len(st.session_state.agent_status)
-                progress_val = (
-                    (completed_count / total_agents) if total_agents > 0 else 0
-                )
+                if total_agents > 0:
+                    progress_val = (completed_count + 0.3 * in_progress_count) / total_agents
+                    # Avoid showing full bar until completion
+                    progress_val = min(progress_val, 0.99)
+                else:
+                    progress_val = 0
                 progress_bar.progress(progress_val)
 
                 # Update status text
@@ -949,55 +1120,29 @@ def run_real_analysis(
 
                 messages_container.markdown("\n".join(all_messages[:15]))
 
-                # Display current report section
-                current_report = None
-                section_titles = {
-                    "market_report": "Market Analysis",
-                    "sentiment_report": "Social Sentiment",
-                    "news_report": "News Analysis",
-                    "fundamentals_report": "Fundamentals Analysis",
-                    "investment_plan": "Research Team Decision",
-                    "trader_investment_plan": "Trading Team Plan",
-                    "final_trade_decision": "Portfolio Management Decision",
-                }
+                # Update partial report during risk/research updates
+                report_container.markdown(
+                    build_partial_report_md(st.session_state.report_sections)
+                )
 
-                # Find the most recently updated section
-                for section, content in st.session_state.report_sections.items():
-                    if content and content.strip():
-                        current_report = f"### {section_titles.get(section, section.title())}\n{content}"
-                        break
+            # Update partial report at the end of the loop iteration as well
+            report_container.markdown(
+                build_partial_report_md(st.session_state.report_sections)
+            )
 
-                if current_report:
-                    report_container.markdown(current_report)
-
-            # Display current report section
-            current_report = None
-            section_titles = {
-                "market_report": "Market Analysis",
-                "sentiment_report": "Social Sentiment",
-                "news_report": "News Analysis",
-                "fundamentals_report": "Fundamentals Analysis",
-                "investment_plan": "Research Team Decision",
-                "trader_investment_plan": "Trading Team Plan",
-                "final_trade_decision": "Portfolio Management Decision",
-            }
-
-            # Find the most recently updated section
-            for section, content in st.session_state.report_sections.items():
-                if content is not None:
-                    current_report = f"### {section_titles[section]}\n{content}"
-
-            if current_report:
-                report_container.markdown(current_report)
-            else:
-                report_container.markdown("*Waiting for analysis report...*")
-
-            # Update progress
+            # Update progress (reflect in-progress work for better UX)
             completed_count = sum(
                 1 for s in st.session_state.agent_status.values() if s == "completed"
             )
+            in_progress_count = sum(
+                1 for s in st.session_state.agent_status.values() if s == "in_progress"
+            )
             total_agents = len(st.session_state.agent_status)
-            progress_val = (completed_count / total_agents) if total_agents > 0 else 0
+            if total_agents > 0:
+                progress_val = (completed_count + 0.3 * in_progress_count) / total_agents
+                progress_val = min(progress_val, 0.99)
+            else:
+                progress_val = 0
             progress_bar.progress(progress_val)
 
             # Update status text
@@ -1135,7 +1280,7 @@ with main_content_col:
         start_analysis = fallback_render_analysis_controls()
 
     # Handle start analysis
-    if start_analysis:
+    if start_analysis and not st.session_state.get("preflight_pending", False):
         # Validate inputs
         if not analysis_params["stock_symbol"]:
             st.error("Please enter a stock symbol")
@@ -1150,21 +1295,74 @@ with main_content_col:
         elif not analysis_params["stock_symbol"]:
             st.error("Please enter a stock symbol")
         else:
-            st.session_state.analysis_running = True
-            st.session_state.progress_messages = deque(maxlen=50)
-            st.session_state.analysis_results = None
-            st.session_state.last_error = None
-
-            # Reset agent status
-            for agent in [
-                "Market Analyst",
-                "Social Analyst",
-                "News Analyst",
-                "Fundamentals Analyst",
-            ]:
-                update_agent_status(agent, "pending")
-
+            # Preflight: resolve ticker to company profile
+            symbol = analysis_params["stock_symbol"].strip().upper()
+            profile = fetch_company_profile(symbol)
+            st.session_state.preflight_profile = profile
+            st.session_state.pending_symbol = symbol
+            st.session_state.preflight_pending = True
             st.rerun()
+
+    # If preflight pending, show confirmation card and gate run start
+    # Only show when analysis is not running to avoid a greyed-out card lingering
+    if st.session_state.get("preflight_pending", False) and not st.session_state.get("analysis_running", False):
+        preflight_placeholder = st.empty()
+        with preflight_placeholder.container(border=True):
+            prof = st.session_state.get("preflight_profile") or {}
+            symbol = st.session_state.get("pending_symbol") or analysis_params.get("stock_symbol", "").upper()
+            st.markdown("#### 🔎 Ticker Resolution")
+            if prof:
+                st.markdown(
+                    f"**Ticker:** {symbol}  ")
+                st.markdown(
+                    f"**Company:** {prof.get('name', 'N/A')}  ")
+                st.markdown(
+                    f"**Exchange:** {prof.get('exchange', 'N/A')} · **Country:** {prof.get('country', 'N/A')}  ")
+                st.markdown(
+                    f"**Industry:** {prof.get('finnhubIndustry', 'N/A')}  ")
+                if prof.get("weburl"):
+                    st.markdown(f"**Website:** {prof.get('weburl')}")
+            else:
+                st.warning("Could not resolve company profile automatically. You can still proceed or change the symbol.")
+
+            col_ok, col_change = st.columns([1, 1])
+            with col_ok:
+                if st.button("✅ Looks right — Proceed", use_container_width=True):
+                    # Lock in the resolved profile (possibly empty if not found)
+                    st.session_state.resolved_profile = prof if prof else {"ticker": symbol}
+                    # Reset UI state to avoid stale content
+                    st.session_state.progress_messages = deque(maxlen=50)
+                    st.session_state.tool_calls = deque(maxlen=100)
+                    st.session_state.analysis_results = None
+                    st.session_state.last_error = None
+                    st.session_state.report_sections = {
+                        "market_report": None,
+                        "sentiment_report": None,
+                        "news_report": None,
+                        "fundamentals_report": None,
+                        "investment_plan": None,
+                        "trader_investment_plan": None,
+                        "final_trade_decision": None,
+                    }
+                    for agent in [
+                        "Market Analyst",
+                        "Social Analyst",
+                        "News Analyst",
+                        "Fundamentals Analyst",
+                    ]:
+                        update_agent_status(agent, "pending")
+                    # Proceed to start analysis and clear preflight UI
+                    st.session_state.preflight_pending = False
+                    st.session_state.analysis_running = True
+                    preflight_placeholder.empty()
+                    st.rerun()
+            with col_change:
+                if st.button("✏️ Change Symbol", type="secondary", use_container_width=True):
+                    st.session_state.preflight_pending = False
+                    st.session_state.preflight_profile = None
+                    st.session_state.pending_symbol = None
+                    st.session_state.resolved_profile = None
+                    st.rerun()
 
     st.divider()
 
@@ -1174,6 +1372,7 @@ with main_content_col:
             run_real_analysis(
                 analysis_params["stock_symbol"],
                 analysis_params["analysis_date"],
+                analysis_params,
                 sidebar_config.get("llm_config", {}),
                 sidebar_config.get("selected_analysts", []),
                 analysis_params.get("debug_mode", False),

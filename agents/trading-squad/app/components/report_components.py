@@ -238,3 +238,70 @@ def render_analysis_report(results, debug_mode):
                 st.text(str(results["result"]))
 
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+def build_partial_report_md(sections: dict) -> str:
+    """Build a concise markdown summary of currently available report sections.
+
+    This is designed for incremental updates during streaming to show a
+    "report-so-far" in the main UI. It lists available sections and includes
+    short previews where useful.
+    """
+
+    if not isinstance(sections, dict):
+        return "_No report sections available yet._"
+
+    lines = ["#### 📊 Report So Far", ""]
+
+    def short(text: str, n: int = 200) -> str:
+        if not text:
+            return ""
+        text = str(text).strip()
+        return text if len(text) <= n else text[: n - 3] + "..."
+
+    # Define section order, titles and icons
+    ordered = [
+        ("market_report", "📈 Market Analyst"),
+        ("sentiment_report", "👥 Social Analyst"),
+        ("news_report", "📰 News Analyst"),
+        ("fundamentals_report", "💼 Fundamentals Analyst"),
+        ("investment_plan", "🔍 Research Team"),
+        ("trader_investment_plan", "💰 Trading Team Plan"),
+        ("final_trade_decision", "📈 Portfolio Decision"),
+    ]
+
+    ready = 0
+    total = len(ordered)
+    for key, title in ordered:
+        if sections.get(key):
+            lines.append(f"- ✅ {title}: available")
+            ready += 1
+        else:
+            lines.append(f"- ◻️ {title}: pending")
+
+    lines.insert(1, f"_Sections ready: **{ready}/{total}**_")
+
+    # Provide a small preview of the latest available section for context
+    preview = None
+    for key in [
+        "final_trade_decision",
+        "trader_investment_plan",
+        "investment_plan",
+        "fundamentals_report",
+        "news_report",
+        "sentiment_report",
+        "market_report",
+    ]:
+        if sections.get(key):
+            preview = sections.get(key)
+            break
+
+    lines.append("")
+    if preview:
+        lines.append("**Latest update:**")
+        lines.append("")
+        lines.append(short(preview, 280))
+    else:
+        lines.append("_Waiting for first results..._")
+
+    return "\n".join(lines)

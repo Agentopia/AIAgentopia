@@ -4,6 +4,11 @@ Modular components for rendering sidebar configuration sections
 """
 
 import os
+import json
+from urllib.parse import urljoin
+
+import urllib.request
+import urllib.error
 
 import streamlit as st
 
@@ -66,38 +71,68 @@ def render_llm_configuration():
             help="When enabled with OpenAI provider, deep model list is limited to o1 family.",
         )
 
-        # Dynamic model options per provider (sane defaults; can be expanded later)
-        quick_model_options = {
-            "OpenAI": [
-                "gpt-4o-mini",
-                "gpt-4o",
-                "gpt-3.5-turbo",
-            ],
-            "Anthropic": ["claude-3-haiku", "claude-3-sonnet"],
-            "Google": ["gemini-1.5-pro", "gemini-1.5-flash"],
-            "OpenRouter": ["openrouter/auto", "meta-llama/llama-3-8b-instruct"],
-            "Ollama": ["llama3.2:1b", "llama3:8b"],
-        }[provider]
+        def _ollama_models(host: str) -> list[str]:
+            """Attempt to fetch available Ollama models via /api/tags, return list of names.
+            Falls back to common defaults on error.
+            """
+            defaults = ["llama3.2:1b", "llama3:8b"]
+            if not host:
+                return defaults
+            try:
+                # Ensure trailing slash handling and path join
+                tags_url = urljoin(host if host.endswith("/") else host + "/", "api/tags")
+                req = urllib.request.Request(tags_url, method="GET")
+                with urllib.request.urlopen(req, timeout=4) as resp:
+                    data = json.loads(resp.read().decode("utf-8", errors="ignore"))
+                # Ollama returns {"models": [{"name": "llama3:8b"}, ...]}
+                models = [m.get("name") for m in data.get("models", []) if m.get("name")]
+                # Deduplicate and sort for UX
+                uniq = sorted(set(models))
+                return uniq or defaults
+            except Exception:
+                return defaults
 
-        deep_model_options = {
-            "OpenAI": (
-                ["o1-mini", "o1"]
-                if deep_thinking_only
-                else [
-                    "o1-mini",
-                    "o1",
+        # Dynamic model options per provider (sane defaults; dynamic for Ollama)
+        if provider == "Ollama":
+            quick_model_options = _ollama_models(backend_url)
+        else:
+            quick_model_options = {
+                "OpenAI": [
+                    "gpt-4o-mini",
                     "gpt-4o",
-                    "gpt-4-turbo",
-                ]
-            ),
-            "Anthropic": ["claude-3-opus", "claude-3.5-sonnet"],
-            "Google": ["gemini-1.5-pro", "gemini-1.5-pro-exp"],
-            "OpenRouter": [
-                "anthropic/claude-3.5-sonnet",
-                "meta-llama/llama-3-70b-instruct",
-            ],
-            "Ollama": ["llama3:8b", "llama3:70b"],
-        }[provider]
+                    "gpt-3.5-turbo",
+                ],
+                "Anthropic": ["claude-3-haiku", "claude-3-sonnet"],
+                "Google": ["gemini-1.5-pro", "gemini-1.5-flash"],
+                "OpenRouter": ["openrouter/auto", "meta-llama/llama-3-8b-instruct"],
+                # Keep a minimal fallback for visibility even if provider changed later
+                "Ollama": ["llama3.2:1b", "llama3:8b"],
+            }[provider]
+
+        if provider == "Ollama":
+            # Use same discovered list for deep models (user can pick a heavier one)
+            deep_model_options = _ollama_models(backend_url)
+        else:
+            deep_model_options = {
+                "OpenAI": (
+                    ["o1-mini", "o1"]
+                    if deep_thinking_only
+                    else [
+                        "o1-mini",
+                        "o1",
+                        "gpt-4o",
+                        "gpt-4-turbo",
+                    ]
+                ),
+                "Anthropic": ["claude-3-opus", "claude-3.5-sonnet"],
+                "Google": ["gemini-1.5-pro", "gemini-1.5-pro-exp"],
+                "OpenRouter": [
+                    "anthropic/claude-3.5-sonnet",
+                    "meta-llama/llama-3-70b-instruct",
+                ],
+                # Minimal fallback
+                "Ollama": ["llama3:8b", "llama3:70b"],
+            }[provider]
 
         quick_think_model = st.selectbox(
             "Quick Thinking Model",
