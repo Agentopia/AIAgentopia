@@ -33,7 +33,7 @@ def render_llm_configuration():
         provider = st.selectbox(
             "LLM Provider",
             options=["OpenAI", "Anthropic", "Google", "OpenRouter", "Ollama"],
-            index=0,
+            index=4,  # Set Ollama as default (index 4)
             help="Choose the LLM provider. Model menus update accordingly.",
         )
 

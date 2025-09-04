@@ -11,7 +11,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import ToolNode
 from tradingagents.agents import *
 from tradingagents.agents.utils.memory import FinancialSituationMemory
-from tradingagents.dataflows.interface import set_config
+from tradingagents.dataflows.config import set_config
 from tradingagents.default_config import DEFAULT_CONFIG
 
 from .conditional_logic import ConditionalLogic

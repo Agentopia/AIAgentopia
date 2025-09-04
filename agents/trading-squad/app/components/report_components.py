@@ -8,19 +8,24 @@ import streamlit as st
 
 def render_analysis_report(results, debug_mode):
     """Render the full analysis report with tabs for each section."""
-    st.markdown('<div class="result-container">', unsafe_allow_html=True)
 
-    # Results Header with Metrics
-    st.subheader(f"📈 Complete Analysis Report: {results['symbol']}")
+    # Results Header with Metrics - optimized font sizes
+    st.markdown("### 📈 Complete Analysis Report")
+    st.caption(f"Analysis for {results['symbol']} completed on {results['date']}")
 
-    # Key Metrics Row
+    # Key Metrics Row - more compact
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
-        st.metric("Stock Symbol", results["symbol"])
+        st.metric("Symbol", results["symbol"])
     with col_m2:
-        st.metric("Analysis Date", results["date"])
+        st.metric("Date", results["date"])
     with col_m3:
-        st.metric("Completed", results["timestamp"])
+        st.metric(
+            "Completed",
+            results["timestamp"].split()[1]
+            if " " in results["timestamp"]
+            else results["timestamp"],
+        )
     with col_m4:
         # Extract decision from results for metric - handle missing decision key
         decision = results.get(
@@ -38,9 +43,7 @@ def render_analysis_report(results, debug_mode):
             )
         else:
             decision_summary = "ANALYZE"
-        st.metric("Recommendation", decision_summary)
-
-    st.divider()
+        st.metric("Decision", decision_summary)
 
     # Complete Team-Based Report Sections (100% CLI feature parity)
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(

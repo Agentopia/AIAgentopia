@@ -53,46 +53,88 @@ if COMPONENTS_AVAILABLE:
 st.markdown(
     """
 <style>
-/* Agent Status Button Styling */
-.stButton > button[data-testid="baseButton-secondary"] {
+/* Agent Status Button Styling - Updated selectors for actual Streamlit buttons */
+
+/* Running agents (type="primary") - Enhanced visibility */
+button[kind="primary"] {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    border: 2px solid #38bdf8 !important;
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4) !important;
+    animation: agentPulse 2s infinite !important;
+}
+
+/* Agent status buttons - ONLY inside expanders (team sections) */
+.stExpander button[kind="secondary"] {
     background-color: #4a4a4a !important;
     color: white !important;
-    border: none !important;
+    border: 1px solid #666666 !important;
 }
 
-.stButton > button[data-testid="baseButton-primary"] {
-    background-color: #1f77b4 !important;
-    color: white !important;
-    border: none !important;
-    animation: agentPulse 2s infinite;
-}
-
-/* Pulsing animation for running agents */
+/* Enhanced pulsing animation for running agents */
 @keyframes agentPulse {
-    0% { box-shadow: 0 0 0 0 rgba(31, 119, 180, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(31, 119, 180, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(31, 119, 180, 0); }
+    0% {
+        transform: scale(1.0);
+        box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4), 0 0 0 0 rgba(14, 165, 233, 0.7);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 4px 20px rgba(14, 165, 233, 0.6), 0 0 0 15px rgba(14, 165, 233, 0);
+    }
+    100% {
+        transform: scale(1.0);
+        box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4), 0 0 0 0 rgba(14, 165, 233, 0);
+    }
 }
 
-/* Completed agent styling */
-.agent-completed .stButton > button {
-    background-color: #2d5a27 !important;
-    color: white !important;
+/* Export button styling - remove pulsing from download buttons */
+.stDownloadButton > button {
+    animation: none !important;
 }
 
-/* Error agent styling */
-.agent-error .stButton > button {
-    background-color: #666666 !important;
-    color: white !important;
+/* Color-coded export buttons - targeting actual download buttons */
+/* First, override the default gray styling for download buttons */
+.stDownloadButton > button[kind="secondary"] {
+    background-color: transparent !important;
+    border: 1px solid #666666 !important;
 }
 
-/* Pending agent styling */
-.agent-pending .stButton > button {
-    background-color: #4a4a4a !important;
+/* Target download buttons by their text content */
+.stDownloadButton > button[kind="secondary"]:has-text("📄 Full Report") {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
     color: white !important;
+    border: 1px solid #3b82f6 !important;
 }
-</style>
-""",
+
+.stDownloadButton > button[kind="secondary"]:has-text("📋 Execution Log") {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+    color: white !important;
+    border: 1px solid #8b5cf6 !important;
+}
+
+/* Target regular button for Quick Summary */
+button[kind="secondary"]:has-text("🎯 Quick Summary") {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+    color: white !important;
+    border: 1px solid #06b6d4 !important;
+}
+
+
+/* Alternative selectors in case the above don't work */
+.stButton > button[data-testid="baseButton-primary"],
+div[data-testid="stButton"] > button[kind="primary"] {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    border: 2px solid #38bdf8 !important;
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4) !important;
+    animation: agentPulse 2s infinite !important;
+}
+
+</style>""",
     unsafe_allow_html=True,
 )
 
@@ -261,6 +303,36 @@ def fallback_render_agent_card(placeholder, agent, status):
         placeholder.warning(f"⏳ {agent}")
 
 
+def get_agent_display_text(agent, status):
+    """Get dynamic display text based on agent name and status"""
+    # Map agent names to their working activity
+    agent_activities = {
+        "Market Analyst": "Market Analysis",
+        "Social Analyst": "Social Analysis",
+        "News Analyst": "News Analysis",
+        "Fundamentals Analyst": "Fundamentals Analysis",
+        "Bull Researcher": "Bull Research",
+        "Bear Researcher": "Bear Research",
+        "Research Manager": "Research Management",
+        "Trader": "Trading Analysis",
+        "Risky Analyst": "Risk Analysis",
+        "Neutral Analyst": "Neutral Analysis",
+        "Safe Analyst": "Safety Analysis",
+        "Portfolio Manager": "Portfolio Management",
+    }
+
+    activity = agent_activities.get(agent, f"{agent} Work")
+
+    if status == "in_progress":
+        return f"🔄 {activity} is Working"
+    elif status == "completed":
+        return f"✅ {agent} Done"
+    elif status == "error":
+        return f"❌ {agent} Error"
+    else:  # pending
+        return f"⏳ {agent}"
+
+
 def render_agent_button(placeholder, agent, status):
     """Render agent button with proper styling based on status"""
     # Use session state counter for unique keys
@@ -269,10 +341,13 @@ def render_agent_button(placeholder, agent, status):
     st.session_state.button_counter += 1
     unique_id = st.session_state.button_counter
 
+    # Get dynamic display text
+    display_text = get_agent_display_text(agent, status)
+
     with placeholder.container():
         if status == "in_progress":
             st.button(
-                f"🔄 {agent}",
+                display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
                 help=f"{agent} is currently working...",
@@ -280,7 +355,7 @@ def render_agent_button(placeholder, agent, status):
             )
         elif status == "completed":
             st.button(
-                f"✅ {agent}",
+                display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
                 help=f"{agent} has completed analysis",
@@ -288,7 +363,7 @@ def render_agent_button(placeholder, agent, status):
             )
         elif status == "error":
             st.button(
-                f"❌ {agent}",
+                display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
                 help=f"{agent} encountered an error",
@@ -296,7 +371,7 @@ def render_agent_button(placeholder, agent, status):
             )
         else:  # pending
             st.button(
-                f"⏳ {agent}",
+                display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
                 help=f"{agent} is waiting to start",
@@ -353,10 +428,10 @@ def generate_markdown_report(analysis_results: dict) -> str:
     # Header
     markdown_content = f"""# Trading Analysis Report
 
-**Symbol:** {results.get('symbol', 'N/A')}
-**Analysis Date:** {results.get('date', 'N/A')}
-**Generated:** {results.get('timestamp', 'N/A')}
-**Final Decision:** {results.get('decision', 'N/A')}
+**Symbol:** {results.get("symbol", "N/A")}
+**Analysis Date:** {results.get("date", "N/A")}
+**Generated:** {results.get("timestamp", "N/A")}
+**Final Decision:** {results.get("decision", "N/A")}
 
 ---
 
@@ -384,8 +459,8 @@ def generate_markdown_report(analysis_results: dict) -> str:
 ## Analysis Metadata
 
 - **Analysis Framework:** TradingAgents Multi-Agent System
-- **Report Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-- **Configuration:** {results.get('symbol', 'N/A')} analysis for {results.get('date', 'N/A')}
+- **Report Generated:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+- **Configuration:** {results.get("symbol", "N/A")} analysis for {results.get("date", "N/A")}
 
 *This report was generated by the TradingAgents collaborative AI framework.*
 """
@@ -464,7 +539,7 @@ Symbol: {symbol}
 Date: {date}
 Decision: {decision}
 Reasoning: {reasoning}
-Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
+Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"""
 
     return summary
 
@@ -1147,11 +1222,6 @@ with agent_status_col:
 
 # Results section
 if st.session_state.analysis_results and not st.session_state.analysis_running:
-    st.header("📊 Analysis Results")
-
-    # Export functionality section
-    st.subheader("📥 Export Options")
-
     # Pre-generate export content
     markdown_content = generate_markdown_report(st.session_state.analysis_results)
     markdown_filename = f"trading_analysis_{st.session_state.analysis_results.get('symbol', 'report')}_{st.session_state.analysis_results.get('date', 'unknown')}.md"
@@ -1165,21 +1235,36 @@ if st.session_state.analysis_results and not st.session_state.analysis_running:
 
     decision_summary = get_decision_summary(st.session_state.analysis_results)
 
-    # Clean 3-button layout
-    export_col1, export_col2, export_col3 = st.columns(3, gap="medium")
+    # Header with inline export buttons - single row layout with reduced button width
+    col1, col2, col3, col4, col5 = st.columns([2.5, 0.9, 0.9, 0.9, 1.8], gap="small")
 
-    with export_col1:
+    with col1:
+        st.markdown(
+            '<h2 style="margin-top: 0; margin-bottom: 0; white-space: nowrap; line-height: 2.5rem;">📊 Analysis Results</h2>',
+            unsafe_allow_html=True,
+        )
+
+    with col2:
+        st.markdown(
+            '<div style="display: flex; align-items: center; height: 2.5rem;">',
+            unsafe_allow_html=True,
+        )
         st.download_button(
             label="📄 Full Report",
             data=markdown_content,
             file_name=markdown_filename,
             mime="text/markdown",
             use_container_width=True,
-            type="primary",
+            type="secondary",
             help="Download complete analysis in Markdown format",
         )
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    with export_col2:
+    with col3:
+        st.markdown(
+            '<div style="display: flex; align-items: center; height: 2.5rem;">',
+            unsafe_allow_html=True,
+        )
         st.download_button(
             label="📋 Execution Log",
             data=jsonl_content,
@@ -1187,30 +1272,67 @@ if st.session_state.analysis_results and not st.session_state.analysis_running:
             mime="application/jsonl",
             use_container_width=True,
             type="secondary",
-            help="Download detailed process log with tool calls",
+            help="Download detailed execution log in JSONL format",
         )
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    with export_col3:
-        # For Quick Summary, use a button that shows the summary when clicked
+    with col4:
+        st.markdown(
+            '<div style="display: flex; align-items: center; height: 2.5rem;">',
+            unsafe_allow_html=True,
+        )
         if st.button(
             "🎯 Quick Summary",
             use_container_width=True,
-            help="View key decision for easy sharing",
+            type="secondary",
+            help="Toggle quick decision summary display",
         ):
-            st.session_state.show_summary = not st.session_state.get(
-                "show_summary", False
+            st.session_state.show_quick_summary = not st.session_state.get(
+                "show_quick_summary", False
             )
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Show summary if button was clicked
+    # JavaScript to directly style export buttons
+    st.markdown(
+        """
+    <script>
+    function styleExportButtons() {
+        const buttons = document.querySelectorAll('button[kind="secondary"]');
+        buttons.forEach(btn => {
+            const text = btn.textContent || btn.innerText;
+            if (text.includes('📄')) {
+                btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                btn.style.color = 'white';
+                btn.style.border = '1px solid #3b82f6';
+            } else if (text.includes('📋')) {
+                btn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+                btn.style.color = 'white';
+                btn.style.border = '1px solid #8b5cf6';
+            } else if (text.includes('🎯')) {
+                btn.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+                btn.style.color = 'white';
+                btn.style.border = '1px solid #06b6d4';
+            }
+        });
+    }
+
+    // Run immediately and on DOM changes
+    styleExportButtons();
+    setTimeout(styleExportButtons, 100);
+    setTimeout(styleExportButtons, 500);
+
+    // Watch for DOM changes
+    const observer = new MutationObserver(styleExportButtons);
+    observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    # Show summary only when explicitly requested (not by default)
     if st.session_state.get("show_summary", False):
-        st.text_area(
-            "Decision Summary (Select all and copy):",
-            value=decision_summary,
-            height=120,
-            help="Select all text and copy (Ctrl+A, Ctrl+C)",
-        )
-
-    st.divider()
+        st.markdown("**Decision Summary:**")
+        st.code(decision_summary, language=None)
 
     if COMPONENTS_AVAILABLE:
         render_analysis_report(
