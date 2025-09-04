@@ -1,3 +1,2 @@
 # Development dependencies
 ruff
-pre-commit
