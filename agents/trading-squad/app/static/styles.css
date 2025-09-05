@@ -73,6 +73,7 @@
     border-radius: var(--radius-md);
     margin-bottom: var(--spacing-md);
     box-shadow: var(--shadow-md);
+    margin-top: -0.25rem; /* small upward nudge to reduce top gap */
 }
 
 .main-header h1 {
@@ -223,6 +224,7 @@
 
 /* Override Streamlit's main container padding */
 .main .block-container {
+    padding-top: 0.5rem !important; /* reduce top padding to roughly half */
     padding-left: 0 !important;
     padding-right: 0 !important;
     max-width: none !important;

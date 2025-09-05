@@ -6,6 +6,100 @@ Modular components for rendering the final analysis report.
 import streamlit as st
 
 
+def _first_non_empty(*values):
+    """Return the first value that is not falsy (None/""/{}), else None."""
+    for v in values:
+        if v:
+            return v
+    return None
+
+
+def normalize_final_state_keys(final_state: dict) -> dict:
+    """Normalize backend result keys to the canonical schema expected by the UI.
+
+    This function is non-destructive: it only fills canonical fields when missing,
+    using values from known alias keys. It returns the same dict instance for
+    convenience.
+
+    Canonical keys expected by the UI tabs:
+      - investment_debate_state: {bull_history, bear_history, judge_decision}
+      - risk_debate_state: {risky_history, neutral_history, safe_history, judge_decision}
+      - trader_investment_plan (str)
+      - final_trade_decision (str)
+    """
+    if not isinstance(final_state, dict):
+        return final_state
+
+    # --- Research/Investment debate normalization ---
+    inv_state = final_state.get("investment_debate_state")
+    research_alias = _first_non_empty(
+        inv_state,
+        final_state.get("research_debate_state"),
+        final_state.get("investment_debate"),
+        final_state.get("debate_state"),
+    )
+    if isinstance(research_alias, dict):
+        canonical = dict(inv_state) if isinstance(inv_state, dict) else {}
+        canonical.setdefault(
+            "bull_history",
+            _first_non_empty(research_alias.get("bull_history"), research_alias.get("bull")),
+        )
+        canonical.setdefault(
+            "bear_history",
+            _first_non_empty(research_alias.get("bear_history"), research_alias.get("bear")),
+        )
+        canonical.setdefault(
+            "judge_decision",
+            _first_non_empty(
+                research_alias.get("judge_decision"),
+                research_alias.get("decision"),
+            ),
+        )
+        final_state["investment_debate_state"] = canonical
+
+    # --- Risk debate normalization ---
+    risk_state = final_state.get("risk_debate_state")
+    risk_alias = _first_non_empty(
+        risk_state,
+        final_state.get("risk_debate"),
+        final_state.get("risk_assessment_state"),
+    )
+    if isinstance(risk_alias, dict):
+        canonical_risk = dict(risk_state) if isinstance(risk_state, dict) else {}
+        canonical_risk.setdefault(
+            "risky_history",
+            _first_non_empty(risk_alias.get("risky_history"), risk_alias.get("aggressive")),
+        )
+        canonical_risk.setdefault("neutral_history", risk_alias.get("neutral_history"))
+        canonical_risk.setdefault(
+            "safe_history",
+            _first_non_empty(risk_alias.get("safe_history"), risk_alias.get("conservative")),
+        )
+        canonical_risk.setdefault(
+            "judge_decision",
+            _first_non_empty(risk_alias.get("judge_decision"), risk_alias.get("decision")),
+        )
+        final_state["risk_debate_state"] = canonical_risk
+
+    # --- Trader plan normalization ---
+    if not final_state.get("trader_investment_plan"):
+        final_state["trader_investment_plan"] = _first_non_empty(
+            final_state.get("trader_investment_plan"),
+            final_state.get("investment_plan"),
+            final_state.get("trader_plan"),
+        )
+
+    # --- Final decision normalization ---
+    if not final_state.get("final_trade_decision"):
+        final_state["final_trade_decision"] = _first_non_empty(
+            final_state.get("final_trade_decision"),
+            final_state.get("final_decision"),
+            final_state.get("portfolio_decision"),
+        )
+
+    return final_state
+
+
 def render_analysis_report(results, debug_mode):
     """Render the full analysis report with tabs for each section."""
 
@@ -58,6 +152,8 @@ def render_analysis_report(results, debug_mode):
     )
 
     final_state = results.get("result", {})
+    # Normalize keys to ensure tabs populate even if backend uses aliases
+    final_state = normalize_final_state_keys(final_state)
 
     with tab1:
         st.subheader("🎯 Final Trading Decision & Summary")
@@ -217,7 +313,6 @@ def render_analysis_report(results, debug_mode):
 
         if final_state.get("risk_debate_state", {}).get("judge_decision"):
             with st.container():
-                st.markdown("#### 📈 Portfolio Manager Final Decision")
                 st.success(final_state["risk_debate_state"]["judge_decision"])
 
                 # Show final trade decision if available
