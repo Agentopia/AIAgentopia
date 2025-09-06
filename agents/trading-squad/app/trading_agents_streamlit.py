@@ -42,6 +42,7 @@ try:
     from components.header_component import render_header
     from components.report_components import render_analysis_report, build_partial_report_md
     from components.sidebar_config import render_sidebar_configuration
+    from components.tool_calls import render_tool_calls_sidebar
 
     COMPONENTS_AVAILABLE = True
 except ImportError:
@@ -646,6 +647,8 @@ def run_real_analysis(
         # Initialize with a placeholder message to verify container works
         messages_container.markdown("- Waiting for analysis to start...")
 
+        # (Removed main-area Tooling section; Tool Calls now lives in sidebar)
+
         st.markdown("### 📊 Current Report")
         report_container = st.empty()
 
@@ -731,6 +734,16 @@ def run_real_analysis(
         status_text.text("🚀 Starting analysis...")
         date_str = analysis_date.strftime("%Y-%m-%d")
 
+        # Lifecycle log: AnalysisStart
+        if st.session_state.get("ui_debug_mode"):
+            ts = datetime.now().strftime("%H:%M:%S")
+            st.session_state.tool_calls.appendleft(
+                f"{ts} [Tool] AnalysisStart: {stock_symbol} @ {date_str}"
+            )
+            if "tool_calls_sidebar_placeholder" in st.session_state:
+                with st.session_state.tool_calls_sidebar_placeholder.container():
+                    render_tool_calls_sidebar(expanded=False)
+
         # Initialize state and get graph args - matching CLI exactly
         init_agent_state = ta.propagator.create_initial_state(stock_symbol, date_str)
         args = ta.propagator.get_graph_args()
@@ -746,6 +759,8 @@ def run_real_analysis(
         st.session_state.progress_messages.appendleft(
             f"{timestamp} - Selected analysts: {', '.join(mapped_analysts)}"
         )
+
+        # Debug-only: no longer mirroring initial progress lines to avoid duplication with Live Feed
 
         # Show the most recent messages immediately (before streaming starts)
         initial_msgs = []
@@ -824,7 +839,9 @@ def run_real_analysis(
                         f"{timestamp} [{msg_type}] {content[:100]}..."
                     )
 
-                    # If it's a tool call, add it to tool calls
+                    # Debug-only: do not mirror streamed messages into Tool Calls (keeps panel focused)
+
+                    # If it's a tool call, add it to tool calls and refresh the sidebar panel
                     if hasattr(last_message, "tool_calls"):
                         for tool_call in last_message.tool_calls:
                             if isinstance(tool_call, dict):
@@ -835,6 +852,12 @@ def run_real_analysis(
                                 st.session_state.tool_calls.appendleft(
                                     f"{timestamp} [Tool] {tool_call.name}: {str(tool_call.args)[:50]}..."
                                 )
+                        # Refresh sidebar panel if debug mode is on
+                        if analysis_params.get("debug_mode", False):
+                            if "tool_calls_sidebar_placeholder" not in st.session_state:
+                                st.session_state.tool_calls_sidebar_placeholder = st.sidebar.empty()
+                            with st.session_state.tool_calls_sidebar_placeholder.container():
+                                render_tool_calls_sidebar(expanded=False)
 
                     # Update UI displays immediately after adding messages
                     all_messages = []
@@ -1226,6 +1249,15 @@ def run_real_analysis(
             status_text.text("✅ Analysis complete!")
             progress_bar.progress(1.0)
             st.success("🎉 Real analysis completed successfully!")
+            # Lifecycle log: AnalysisComplete
+            if st.session_state.get("ui_debug_mode"):
+                ts = datetime.now().strftime("%H:%M:%S")
+                st.session_state.tool_calls.appendleft(
+                    f"{ts} [Tool] AnalysisComplete: {stock_symbol} @ {date_str}"
+                )
+                if "tool_calls_sidebar_placeholder" in st.session_state:
+                    with st.session_state.tool_calls_sidebar_placeholder.container():
+                        render_tool_calls_sidebar(expanded=False)
             st.rerun()
 
     except Exception as e:
@@ -1234,6 +1266,15 @@ def run_real_analysis(
         st.session_state.last_error = str(e)
         if debug_mode:
             st.exception(e)
+        # Lifecycle log: AnalysisFailed
+        if st.session_state.get("ui_debug_mode"):
+            ts = datetime.now().strftime("%H:%M:%S")
+            st.session_state.tool_calls.appendleft(
+                f"{ts} [Tool] AnalysisFailed: {stock_symbol}"
+            )
+            if "tool_calls_sidebar_placeholder" in st.session_state:
+                with st.session_state.tool_calls_sidebar_placeholder.container():
+                    render_tool_calls_sidebar(expanded=False)
         st.rerun()
 
 
@@ -1279,6 +1320,17 @@ with main_content_col:
         analysis_params = fallback_render_analysis_params()
         start_analysis = fallback_render_analysis_controls()
 
+    # Ensure the Tool Calls debug panel appears in the sidebar immediately when Debug Mode is ON
+    if analysis_params.get("debug_mode", False):
+        # Persist UI debug flag for hooks outside this scope (e.g., preflight/profile fetch)
+        st.session_state.ui_debug_mode = True
+        if "tool_calls_sidebar_placeholder" not in st.session_state:
+            st.session_state.tool_calls_sidebar_placeholder = st.sidebar.empty()
+        with st.session_state.tool_calls_sidebar_placeholder.container():
+            render_tool_calls_sidebar(expanded=False)
+    else:
+        st.session_state.ui_debug_mode = False
+
     # Handle start analysis
     if start_analysis and not st.session_state.get("preflight_pending", False):
         # Validate inputs
@@ -1301,6 +1353,15 @@ with main_content_col:
             st.session_state.preflight_profile = profile
             st.session_state.pending_symbol = symbol
             st.session_state.preflight_pending = True
+            # Debug-only: log that run is initiated (preflight about to rerun)
+            if st.session_state.get("ui_debug_mode"):
+                ts = datetime.now().strftime("%H:%M:%S")
+                st.session_state.tool_calls.appendleft(
+                    f"{ts} [Tool] RunInitiated: {symbol}"
+                )
+                if "tool_calls_sidebar_placeholder" in st.session_state:
+                    with st.session_state.tool_calls_sidebar_placeholder.container():
+                        render_tool_calls_sidebar(expanded=False)
             st.rerun()
 
     # If preflight pending, show confirmation card and gate run start
