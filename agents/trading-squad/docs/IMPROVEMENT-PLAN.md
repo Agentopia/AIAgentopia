@@ -36,8 +36,12 @@ Legend: [ ] not started, [~] in progress, [x] done
 - [x] Optional tool-call hooks (decision: de-scoped)
   - Deep per-tool instrumentation (durations, arguments, etc.) was evaluated and intentionally deferred
   - Rationale: Limited end-user value vs. complexity; avoids UI noise and maintenance overhead
-- [ ] Accessibility polish
-  - Add ARIA labels and ensure high-contrast for agent status buttons in `render_agent_button()`
+- [x] Accessibility polish
+  - Added descriptive `help` strings in `render_agent_button()` for SR users
+  - High-contrast, keyboard-visible focus rings for primary/secondary buttons
+  - Reduced visual weight of non-running (secondary) buttons; smaller font and tighter padding
+  - Increased team expander title size/weight for clear hierarchy
+  - Pending state now shows "- Waiting" on sub-agent buttons
 
 ### 3.3 UI Optimization Plan (Integrated Excerpts)
 
@@ -99,6 +103,10 @@ Note: We will only take items from the optimization plan that do not risk breaki
   - Simplified to lifecycle-only logs to avoid duplication with Live Analysis Feed
   - Removed noisy mirrors, Finnhub and chunk-level logs; reduced maintenance surface
   - Decision: deeper instrumentation de-scoped; feature closed as "minimal and non-invasive"
+
+- 2025-09-06 10:13: Accessibility + progress note (merged to feature branch)
+  - Accessibility polish complete: descriptive tooltips for status buttons; high-contrast focus states; subdued secondary buttons; increased expander header size; pending shows "- Waiting"
+  - Added dynamic analysts completion note next to "Analysis in Progress" header that updates live (e.g., `2/12 analysts completed`)
 
 ## 8) Links
 
