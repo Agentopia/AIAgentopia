@@ -70,11 +70,35 @@ button[kind="primary"] {
     animation: agentPulse 2s infinite !important;
 }
 
+/* High-contrast focus state for primary buttons (keyboard accessibility) */
+button[kind="primary"]:focus-visible {
+    outline: 3px solid #f59e0b !important; /* amber ring */
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.35), 0 4px 20px rgba(14, 165, 233, 0.4) !important;
+}
+
+/* Team expander titles: increase size so they are larger than sub-agent buttons */
+.stExpander summary,
+.stExpander > div[role="button"] {
+    font-size: 1.0625rem !important; /* ~17px */
+    font-weight: 700 !important;
+}
+
 /* Agent status buttons - ONLY inside expanders (team sections) */
 .stExpander button[kind="secondary"] {
-    background-color: #4a4a4a !important;
-    color: white !important;
-    border: 1px solid #666666 !important;
+    background-color: #1f2937 !important; /* slate-800 */
+    color: #ffffff !important;
+    border: 1px solid transparent !important; /* de-emphasized border */
+    box-shadow: none !important; /* remove heavy outline look */
+    font-size: 0.875rem !important; /* 14px: smaller than expander title */
+    padding: 0.35rem 0.75rem !important; /* slightly tighter */
+}
+
+/* High-contrast focus state for secondary buttons */
+.stExpander button[kind="secondary"]:focus-visible {
+    outline: 3px solid #f59e0b !important; /* amber ring */
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.35) !important;
 }
 
 /* Enhanced pulsing animation for running agents */
@@ -136,6 +160,14 @@ div[data-testid="stButton"] > button[kind="primary"] {
     border: 2px solid #38bdf8 !important;
     box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4) !important;
     animation: agentPulse 2s infinite !important;
+}
+
+/* Focus state fallback for alternative selectors */
+.stButton > button[data-testid="baseButton-primary"]:focus-visible,
+div[data-testid="stButton"] > button[kind="primary"]:focus-visible {
+    outline: 3px solid #f59e0b !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.35), 0 4px 20px rgba(14, 165, 233, 0.4) !important;
 }
 
 </style>""",
@@ -337,7 +369,9 @@ def get_agent_display_text(agent, status):
         "Portfolio Manager": "Portfolio Management",
     }
 
+
     activity = agent_activities.get(agent, f"{agent} Work")
+
 
     if status == "in_progress":
         return f"🔄 {activity} is Working"
@@ -346,7 +380,7 @@ def get_agent_display_text(agent, status):
     elif status == "error":
         return f"❌ {agent} Error"
     else:  # pending
-        return f"⏳ {agent}"
+        return f"⏳ {agent} - Waiting"
 
 
 def render_agent_button(placeholder, agent, status):
@@ -366,7 +400,7 @@ def render_agent_button(placeholder, agent, status):
                 display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
-                help=f"{agent} is currently working...",
+                help=f"Button. {agent} status: in progress. This indicates the agent is actively working.",
                 type="primary",
             )
         elif status == "completed":
@@ -374,7 +408,7 @@ def render_agent_button(placeholder, agent, status):
                 display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
-                help=f"{agent} has completed analysis",
+                help=f"Button. {agent} status: completed. Analysis has finished successfully.",
                 type="secondary",
             )
         elif status == "error":
@@ -382,7 +416,7 @@ def render_agent_button(placeholder, agent, status):
                 display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
-                help=f"{agent} encountered an error",
+                help=f"Button. {agent} status: error. The agent encountered an issue during analysis.",
                 type="secondary",
             )
         else:  # pending
@@ -390,7 +424,7 @@ def render_agent_button(placeholder, agent, status):
                 display_text,
                 key=f"agent_{agent}_{status}_{unique_id}",
                 disabled=True,
-                help=f"{agent} is waiting to start",
+                help=f"Button. {agent} status: pending. Waiting to start.",
                 type="secondary",
             )
 
@@ -407,6 +441,36 @@ def update_agent_status(agent: str, status: str):
             render_agent_button(
                 st.session_state.agent_placeholders[agent], agent, status
             )
+        # Also refresh the dynamic header counts immediately if available
+        header_ph = st.session_state.get("progress_header_placeholder")
+        if header_ph is not None:
+            try:
+                render_progress_header(header_ph)
+            except Exception:
+                pass
+
+
+def get_analyst_progress_counts() -> tuple[int, int]:
+    """Return (completed_count, total_count) for agent statuses."""
+    status = st.session_state.get("agent_status", {})
+    total = len(status)
+    done = 0
+    if status:
+        for s in status.values():
+            if s in ("completed", "complete"):
+                done += 1
+    return done, total
+
+
+def render_progress_header(header_placeholder):
+    """Render the 'Analysis in Progress' header with dynamic completion counts."""
+    done, total = get_analyst_progress_counts()
+    # Render header + a smaller, less prominent note
+    html = (
+        "<h3 style=\"margin-bottom:0.25rem\">🔄 Analysis in Progress...</h3>"
+        f"<div style=\"font-size:0.9rem; color:#9ca3af; margin-top:0.1rem\">({done}/{total} analysts completed)</div>"
+    )
+    header_placeholder.markdown(html, unsafe_allow_html=True)
 
 
 def extract_content_string(content):
@@ -633,7 +697,10 @@ def run_real_analysis(
     # Create progress placeholders
     progress_container = st.container()
     with progress_container:
-        st.subheader("🔄 Analysis in Progress...")
+        header_placeholder = st.empty()
+        # Persist header placeholder so status updates can refresh counts immediately
+        st.session_state["progress_header_placeholder"] = header_placeholder
+        render_progress_header(header_placeholder)
         progress_bar = st.progress(0)
         status_text = st.empty()
 
@@ -772,6 +839,8 @@ def run_real_analysis(
         if mapped_analysts:
             first_analyst = f"{mapped_analysts[0].capitalize()} Analyst"
             update_agent_status(first_analyst, "in_progress")
+            # Refresh dynamic header counts
+            render_progress_header(header_placeholder)
 
         # Debug: Show which analysts are selected
         if debug_mode:
