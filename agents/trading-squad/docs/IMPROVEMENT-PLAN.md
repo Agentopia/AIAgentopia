@@ -1,6 +1,6 @@
 # Trading Squad Improvement Plan (Unified)
 
-Last updated: 2025-09-04 14:21 (local)
+Last updated: 2025-09-05 21:20 (local)
 Owner: Trading Squad
 Repo path: `agents/trading-squad/`
 
@@ -24,15 +24,18 @@ Legend: [ ] not started, [~] in progress, [x] done
   - Dynamic Ollama model discovery via `/api/tags` in `app/components/sidebar_config.py`
   - OpenAI deep-thinking toggle filters to o1 family when enabled
   - Options and defaults aligned for major providers; depth mapping parity preserved
-- [ ] Report key normalization for streamed sections
+- [x] Report key normalization for streamed sections
   - In `app/trading_agents_streamlit.py`, normalize any `*_debate_state` keys to current sections so tabs always populate
-- [ ] Validate after each change (see Section 6)
+- [x] Validate after each change (see Section 6)
 
 ### 3.2 Medium Priority (Observability & Accessibility)
-- [ ] Tool Calls panel in the UI
-  - Collapsible panel rendering `st.session_state.tool_calls` (time, agent, tool, summary)
-- [ ] Optional tool-call hooks (debug-mode only)
-  - Emit start/end/error with durations from `tradingagents/*` and pipe to the UI
+- [x] Tool Calls panel in the UI (minimal, debug-only)
+  - Implemented as a non-invasive, bottom-of-sidebar expander titled "Tool Calls (Debug)"
+  - Shows lifecycle-only entries when Debug Mode is ON: `RunInitiated`, `AnalysisStart`, `AnalysisComplete`/`AnalysisFailed`
+  - No main-area panels; nothing duplicates the Live Analysis Feed
+- [x] Optional tool-call hooks (decision: de-scoped)
+  - Deep per-tool instrumentation (durations, arguments, etc.) was evaluated and intentionally deferred
+  - Rationale: Limited end-user value vs. complexity; avoids UI noise and maintenance overhead
 - [ ] Accessibility polish
   - Add ARIA labels and ensure high-contrast for agent status buttons in `render_agent_button()`
 
@@ -84,6 +87,18 @@ Note: We will only take items from the optimization plan that do not risk breaki
   - Preflight confirmation card now disappears immediately upon confirmation; state reset prevents stale sections
   - Run configuration summary visible at run start and logged to Live Analysis Feed
   - Company identity validation and per-section header correction implemented for streamed reports
+
+- 2025-09-05 16:58: Normalization + minor UI polish (merged to main)
+  - Implemented `normalize_final_state_keys()` in `app/components/report_components.py` and invoked post `final_state = results.get("result", {})` to ensure consistent tab population even when backend keys vary (e.g., `research_debate_state` → `investment_debate_state`, `investment_plan` → `trader_investment_plan`, `portfolio_decision` → `final_trade_decision`).
+  - Fixed duplicate heading in Portfolio Manager tab by removing the inner H4; kept single subheader.
+  - Applied conservative top-spacing tweak for the blue header (reduced top gap without affecting toolbar): `.main-header { margin-top: -0.25rem }`, `.main .block-container { padding-top: 0.5rem !important }`.
+  - PR #21: "feat(trading-squad): normalize report keys and minor UI polish" merged to `main` via squash.
+
+- 2025-09-05 21:20: Tool Calls finalized (minimal, debug-only)
+  - Moved Tool Calls to sidebar only; removed main-area expanders
+  - Simplified to lifecycle-only logs to avoid duplication with Live Analysis Feed
+  - Removed noisy mirrors, Finnhub and chunk-level logs; reduced maintenance surface
+  - Decision: deeper instrumentation de-scoped; feature closed as "minimal and non-invasive"
 
 ## 8) Links
 
