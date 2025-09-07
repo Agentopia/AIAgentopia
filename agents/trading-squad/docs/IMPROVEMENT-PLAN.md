@@ -49,8 +49,8 @@ Reference: `docs/UI_optimization_plan.md`
 
 - [x] Phase 1.1–1.3: API key validation + loading states (already done; keep parity)
 - [x] Phase 2.1–2.2: CSS foundation & optimization (noted as completed in plan)
-- [ ] Phase 2.3: Sidebar configuration streamlining (grouping, progressive disclosure)
-- [ ] Phase 3.1: Agent detail modal optimization (performance, state mgmt)
+- [ ] Phase 2.3: Sidebar configuration streamlining (grouping, progressive disclosure) — de-scoped (very low priority); skipped for now
+- [x] Phase 3.1: Agent detail modal optimization — deemed unnecessary; closed without changes
 - [ ] Phase 3.2: Real-time data optimization (retention, memory monitoring)
 - [ ] Phase 3.3: Results visualization enhancements (charts, dashboards)
 - [ ] Phase 7: Utility function extraction (validation/session/streaming helpers)
@@ -107,6 +107,12 @@ Note: We will only take items from the optimization plan that do not risk breaki
 - 2025-09-06 10:13: Accessibility + progress note (merged to feature branch)
   - Accessibility polish complete: descriptive tooltips for status buttons; high-contrast focus states; subdued secondary buttons; increased expander header size; pending shows "- Waiting"
   - Added dynamic analysts completion note next to "Analysis in Progress" header that updates live (e.g., `2/12 analysts completed`)
+
+- 2025-09-06 10:48: Phase 2.3 de-scoped (very low priority)
+  - Sidebar configuration streamlining deemed cosmetic; no functional gaps. Item marked as skipped for now to avoid unnecessary churn.
+
+- 2025-09-06 18:04: Phase 3.1 closed (not needed)
+  - Agent detail modal/panel optimization evaluated; determined to add complexity without meaningful user value given Live Analysis Feed and final report. Feature considered and closed with no code changes. Main kept stable; experimental branch reverted.
 
 ## 8) Links
 
