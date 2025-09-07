@@ -39,6 +39,8 @@ def render_analysis_parameters():
                 value="CRCL",
                 help="Enter the stock ticker symbol (e.g., AAPL, GOOGL, TSLA, SPY)",
             ).upper()
+            # Persist the last entered symbol for use during the run (when inputs are hidden)
+            st.session_state["last_entered_symbol"] = stock_symbol
 
             # Date Selection
             analysis_date = st.date_input(
@@ -92,6 +94,13 @@ def render_analysis_parameters():
                 help="Show detailed agent communication and debug information",
             )
 
+    else:
+        # During an active run, inputs are hidden. Use the confirmed or last entered symbol.
+        stock_symbol = (
+            (st.session_state.get("pending_symbol") or st.session_state.get("last_entered_symbol") or stock_symbol)
+        )
+        stock_symbol = stock_symbol.upper() if isinstance(stock_symbol, str) else stock_symbol
+
     return {
         "stock_symbol": stock_symbol,
         "analysis_date": analysis_date,
@@ -113,6 +122,9 @@ def render_analysis_controls(analysis_params, llm_config, selected_analysts):
         # Show stop button during analysis
         if st.button("⏹️ Stop Analysis", type="secondary", use_container_width=True):
             st.session_state.analysis_running = False
+            # Clear any stored run configuration tooltip to avoid stale info
+            if "current_run_config_tip" in st.session_state:
+                del st.session_state["current_run_config_tip"]
             st.rerun()
 
     return False  # No analysis start requested

@@ -327,6 +327,9 @@ def fallback_render_analysis_controls():
     if st.session_state.analysis_running:
         if st.button("⏹️ Stop Analysis", type="secondary", use_container_width=True):
             st.session_state.analysis_running = False
+            # Clear any stored run configuration tooltip to avoid stale info
+            if "current_run_config_tip" in st.session_state:
+                del st.session_state["current_run_config_tip"]
             # Debug logging for stop button
             if st.session_state.get("debug_mode", False):
                 timestamp = datetime.now().strftime("%H:%M:%S")
@@ -463,14 +466,105 @@ def get_analyst_progress_counts() -> tuple[int, int]:
 
 
 def render_progress_header(header_placeholder):
-    """Render the 'Analysis in Progress' header with dynamic completion counts."""
+    """Render the 'Analysis in Progress' header with dynamic completion counts.
+
+    Also shows a compact gear icon on the right; hovering reveals the current run
+    configuration (provider/model/base URL) as a native tooltip.
+    """
     done, total = get_analyst_progress_counts()
-    # Render header + a smaller, less prominent note
+    # Build optional tooltip for run configuration
+    tip = st.session_state.get("current_run_config_tip")
+    # Escape quotes for HTML title attribute
+    def _escape_title(s: str) -> str:
+        return (
+            s.replace("&", "&amp;")
+            .replace("\"", "&quot;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+    tip_html = (
+        f'<span title="{_escape_title(tip)}" '
+        'style="cursor:help; font-size:0.95rem; color:#9ca3af; white-space:pre-line" aria-label="Run configuration">⚙️\u00A0Run Configuration</span>'
+        if tip
+        else ""
+    )
+
+    # Render header row with counts and right-aligned gear icon
     html = (
-        "<h3 style=\"margin-bottom:0.25rem\">🔄 Analysis in Progress...</h3>"
-        f"<div style=\"font-size:0.9rem; color:#9ca3af; margin-top:0.1rem\">({done}/{total} analysts completed)</div>"
+        "<div style=\"display:flex; align-items:flex-end; justify-content:space-between;\">"
+        "  <div>"
+        "    <h3 style=\"margin:0 0 0.25rem 0\">🔄 Analysis in Progress...</h3>"
+        f"    <div style=\"font-size:0.9rem; color:#9ca3af; margin-top:0.1rem\">({done}/{total} analysts completed)</div>"
+        "  </div>"
+        f"  <div style=\"padding-left:0.5rem\">{tip_html}</div>"
+        "</div>"
     )
     header_placeholder.markdown(html, unsafe_allow_html=True)
+
+
+# --- Event-driven progress tracking helpers ---
+def _init_progress_tracker(progress_bar_obj):
+    """Initialize event-driven progress tracker in session state.
+
+    We map key analysis milestones to a set of unique events. Each first-time
+    event increases the progress floor, creating a steady, real-time feeling.
+    """
+    st.session_state["progress_bar"] = progress_bar_obj
+    st.session_state["progress_events_done"] = set()
+    # Define the ordered set of events we'll count toward progress
+    st.session_state["progress_events_list"] = [
+        # Initialization
+        "init_start",
+        "framework_ready",
+        "first_analyst_started",
+        # Analyst reports
+        "market_report",
+        "sentiment_report",
+        "news_report",
+        "fundamentals_report",
+        # Research debate milestones
+        "research_bull",
+        "research_bear",
+        "research_manager_decision",
+        # Trader plan
+        "trader_plan",
+        # Risk debate milestones
+        "risk_risky",
+        "risk_safe",
+        "risk_neutral",
+        # Portfolio manager
+        "portfolio_judge",
+        # Finalization
+        "finalized",
+    ]
+    st.session_state["progress_total_events"] = len(
+        st.session_state["progress_events_list"]
+    )
+
+
+def _mark_progress(event_name: str):
+    """Record an analysis event and bump the progress floor proportionally."""
+    bar = st.session_state.get("progress_bar")
+    if bar is None:
+        return
+    events_done = st.session_state.get("progress_events_done")
+    all_events = st.session_state.get("progress_events_list")
+    if not isinstance(events_done, set) or not isinstance(all_events, list):
+        return
+    if event_name in events_done:
+        return
+    events_done.add(event_name)
+    # Compute target progress: start at ~2% and linearly approach ~99%
+    total = max(1, st.session_state.get("progress_total_events", len(all_events)))
+    fraction = len(events_done) / total
+    target = min(0.99, 0.02 + 0.97 * fraction)
+    # Prevent regression
+    target = max(target, st.session_state.get("last_progress", 0.0))
+    try:
+        bar.progress(target)
+        st.session_state["last_progress"] = target
+    except Exception:
+        pass
 
 
 def extract_content_string(content):
@@ -702,11 +796,19 @@ def run_real_analysis(
         st.session_state["progress_header_placeholder"] = header_placeholder
         render_progress_header(header_placeholder)
         progress_bar = st.progress(0)
+        # Initialize a progress floor to prevent regressions in early phases
+        st.session_state["last_progress"] = 0.0
+        # Initialize event-driven progress tracker and mark init start
+        _init_progress_tracker(progress_bar)
+        _mark_progress("init_start")
+        # Show an immediate small progress indicator so users see activity right away
+        try:
+            progress = 0.02
+            progress_bar.progress(progress)
+            st.session_state["last_progress"] = max(st.session_state["last_progress"], progress)
+        except Exception:
+            pass
         status_text = st.empty()
-
-        # Run configuration summary placeholder
-        st.markdown("### ⚙️ Run Configuration")
-        run_config_placeholder = st.empty()
 
         st.markdown("### 💬 Live Analysis Feed")
         messages_container = st.empty()
@@ -758,9 +860,10 @@ def run_real_analysis(
     config["research_depth"] = research_depth
     config["online_tools"] = True
 
-    # Attach resolved profile from preflight if available
-    if st.session_state.get("resolved_profile"):
-        config["company_profile"] = st.session_state.get("resolved_profile")
+    # Fetch a fresh company profile for this run only (no session coupling)
+    local_profile = fetch_company_profile(stock_symbol)
+    if local_profile:
+        config["company_profile"] = local_profile
 
     # Map selected analysts to TradingAgents format
     analyst_mapping = {
@@ -781,8 +884,17 @@ def run_real_analysis(
         ta = TradingAgentsGraph(
             selected_analysts=mapped_analysts, debug=debug_mode, config=config
         )
+        # Bump progress slightly after framework initialization
+        try:
+            progress = 0.08
+            progress_bar.progress(progress)
+            st.session_state["last_progress"] = max(st.session_state["last_progress"], progress)
+        except Exception:
+            pass
+        # Event milestone: framework ready
+        _mark_progress("framework_ready")
 
-        # Run configuration summary
+        # Run configuration summary (condensed into header tooltip)
         provider = config.get("llm_config", {}).get("provider")
         model = (config.get("llm_config", {}).get("config_list") or [{}])[0].get("model")
         base_url = (config.get("llm_config", {}).get("config_list") or [{}])[0].get("base_url")
@@ -790,13 +902,12 @@ def run_real_analysis(
         st.session_state.progress_messages.appendleft(
             f"{timestamp} - Provider: {provider} | Model: {model} | Base URL: {base_url or 'default'}"
         )
-        # Immediately render a visible run configuration panel
-        run_config_md = (
-            f"- **Provider:** `{provider}`\n"
-            f"- **Model:** `{model}`\n"
-            f"- **Base URL:** `{base_url or 'default'}`"
+        # Store a compact run configuration string for the header tooltip
+        st.session_state["current_run_config_tip"] = (
+            f"Provider: {provider}\nModel: {model}\nBase URL: {base_url or 'default'}"
         )
-        run_config_placeholder.info(run_config_md)
+        # Refresh the header to ensure the gear icon + tooltip appear immediately
+        render_progress_header(header_placeholder)
 
         status_text.text("🚀 Starting analysis...")
         date_str = analysis_date.strftime("%Y-%m-%d")
@@ -841,6 +952,15 @@ def run_real_analysis(
             update_agent_status(first_analyst, "in_progress")
             # Refresh dynamic header counts
             render_progress_header(header_placeholder)
+            # Provide an immediate visual bump to indicate analyst work has started
+            try:
+                progress = 0.18
+                progress_bar.progress(progress)
+                st.session_state["last_progress"] = max(st.session_state["last_progress"], progress)
+            except Exception:
+                pass
+            # Event milestone: first analyst started
+            _mark_progress("first_analyst_started")
 
         # Debug: Show which analysts are selected
         if debug_mode:
@@ -861,6 +981,13 @@ def run_real_analysis(
                 messages_container.markdown(
                     f"- {timestamp} [DEBUG] Starting streaming loop"
                 )
+                # Bump progress when the first stream starts arriving
+                try:
+                    progress = 0.15
+                    progress_bar.progress(progress)
+                    st.session_state["last_progress"] = max(st.session_state["last_progress"], progress)
+                except Exception:
+                    pass
 
             for chunk in ta.graph.stream(init_agent_state, **args):
                 if not st.session_state.analysis_running:
@@ -942,9 +1069,8 @@ def run_real_analysis(
                 # Analyst Team Reports
                 if "market_report" in chunk and chunk["market_report"]:
                     content = chunk["market_report"]
-                    company_name = None
-                    if st.session_state.get("resolved_profile"):
-                        company_name = st.session_state["resolved_profile"].get("name")
+                    # Use the local per-run profile's company name if available
+                    company_name = local_profile.get("name") if local_profile else None
                     corrected, ok = validate_and_correct_section(
                         content, company_name, stock_symbol
                     ) if company_name else (content, True)
@@ -956,6 +1082,8 @@ def run_real_analysis(
                         )
                         st.session_state.mismatch_warned_sections.add("market_report")
                     update_agent_status("Market Analyst", "completed")
+                    # Event milestone: market report ready
+                    _mark_progress("market_report")
                     # Set next analyst to in_progress
                     # Check if social analyst is selected using correct format
                     selected_analyst_names = [
@@ -976,9 +1104,8 @@ def run_real_analysis(
                             f"{timestamp} [DEBUG] Received sentiment_report chunk"
                         )
                     content = chunk["sentiment_report"]
-                    company_name = None
-                    if st.session_state.get("resolved_profile"):
-                        company_name = st.session_state["resolved_profile"].get("name")
+                    # Use the local per-run profile's company name if available
+                    company_name = local_profile.get("name") if local_profile else None
                     corrected, ok = validate_and_correct_section(
                         content, company_name, stock_symbol
                     ) if company_name else (content, True)
@@ -990,6 +1117,8 @@ def run_real_analysis(
                         )
                         st.session_state.mismatch_warned_sections.add("sentiment_report")
                     update_agent_status("Social Analyst", "completed")
+                    # Event milestone: sentiment report ready
+                    _mark_progress("sentiment_report")
                     # Set next analyst to in_progress
                     selected_analyst_names = [
                         f"{analyst.lower()}" for analyst in mapped_analysts
@@ -1004,9 +1133,8 @@ def run_real_analysis(
 
                 if "news_report" in chunk and chunk["news_report"]:
                     content = chunk["news_report"]
-                    company_name = None
-                    if st.session_state.get("resolved_profile"):
-                        company_name = st.session_state["resolved_profile"].get("name")
+                    # Use the local per-run profile's company name if available
+                    company_name = local_profile.get("name") if local_profile else None
                     corrected, ok = validate_and_correct_section(
                         content, company_name, stock_symbol
                     ) if company_name else (content, True)
@@ -1018,6 +1146,8 @@ def run_real_analysis(
                         )
                         st.session_state.mismatch_warned_sections.add("news_report")
                     update_agent_status("News Analyst", "completed")
+                    # Event milestone: news report ready
+                    _mark_progress("news_report")
                     # Set next analyst to in_progress
                     selected_analyst_names = [
                         f"{analyst.lower()}" for analyst in mapped_analysts
@@ -1027,9 +1157,8 @@ def run_real_analysis(
 
                 if "fundamentals_report" in chunk and chunk["fundamentals_report"]:
                     content = chunk["fundamentals_report"]
-                    company_name = None
-                    if st.session_state.get("resolved_profile"):
-                        company_name = st.session_state["resolved_profile"].get("name")
+                    # Use the local per-run profile's company name if available
+                    company_name = local_profile.get("name") if local_profile else None
                     corrected, ok = validate_and_correct_section(
                         content, company_name, stock_symbol
                     ) if company_name else (content, True)
@@ -1043,6 +1172,8 @@ def run_real_analysis(
                     update_agent_status("Fundamentals Analyst", "completed")
                     # Set all research team members to in_progress
                     update_research_team_status("in_progress")
+                    # Event milestone: fundamentals report ready
+                    _mark_progress("fundamentals_report")
 
                 # Update partial report after any analyst section change
                 report_container.markdown(
@@ -1063,7 +1194,10 @@ def run_real_analysis(
                     progress_val = min(progress_val, 0.99)
                 else:
                     progress_val = 0
+                # Prevent regression: never drop below last_progress
+                progress_val = max(progress_val, st.session_state.get("last_progress", 0.0))
                 progress_bar.progress(progress_val)
+                st.session_state["last_progress"] = progress_val
 
                 # Update status text
                 in_progress_agents = [
@@ -1079,6 +1213,14 @@ def run_real_analysis(
                 trace.append(chunk)
                 time.sleep(0.1)  # Small delay for UI responsiveness
 
+            # Initialize progress tracker at analysis start
+            if not st.session_state.get("progress_tracker"):
+                st.session_state.progress_tracker = {
+                    "milestones": [],
+                    "completed": 0,
+                    "total": 0,
+                }
+
             # Research Team - Handle Investment Debate State
             if "investment_debate_state" in chunk and chunk["investment_debate_state"]:
                 debate_state = chunk["investment_debate_state"]
@@ -1089,118 +1231,95 @@ def run_real_analysis(
                     bull_responses = debate_state["bull_history"].split("\n")
                     latest_bull = bull_responses[-1] if bull_responses else ""
                     if latest_bull:
-                        timestamp = datetime.now().strftime("%H:%M:%S")
-                        st.session_state.progress_messages.appendleft(
-                            f"{timestamp} [Reasoning] Bull Researcher: {latest_bull[:100]}..."
-                        )
                         st.session_state.report_sections["investment_plan"] = (
                             f"### Bull Researcher Analysis\n{latest_bull}"
                         )
+                        # Event milestone: research bull contribution
+                        _mark_progress("research_bull")
+                    st.session_state.progress_tracker["milestones"].append("bull_history")
+                    st.session_state.progress_tracker["completed"] += 1
+                    st.session_state.progress_tracker["total"] += 1
 
-                # Update Bear Researcher status and report
-                if "bear_history" in debate_state and debate_state["bear_history"]:
-                    update_research_team_status("in_progress")
-                    bear_responses = debate_state["bear_history"].split("\n")
-                    latest_bear = bear_responses[-1] if bear_responses else ""
-                    if latest_bear:
-                        timestamp = datetime.now().strftime("%H:%M:%S")
-                        st.session_state.progress_messages.appendleft(
-                            f"{timestamp} [Reasoning] Bear Researcher: {latest_bear[:100]}..."
-                        )
-                        current_plan = st.session_state.report_sections.get(
-                            "investment_plan", ""
-                        )
-                        st.session_state.report_sections["investment_plan"] = (
-                            f"{current_plan}\n\n### Bear Researcher Analysis\n{latest_bear}"
-                        )
+                # ... (rest of the code remains the same)
 
-                # Update Research Manager status and final decision
-                if "judge_decision" in debate_state and debate_state["judge_decision"]:
-                    update_research_team_status("in_progress")
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    st.session_state.progress_messages.appendleft(
-                        f"{timestamp} [Reasoning] Research Manager: {debate_state['judge_decision'][:100]}..."
-                    )
-                    current_plan = st.session_state.report_sections.get(
-                        "investment_plan", ""
-                    )
-                    st.session_state.report_sections["investment_plan"] = (
-                        f"{current_plan}\n\n### Research Manager Decision\n{debate_state['judge_decision']}"
-                    )
-                    # Mark all research team members as completed
-                    update_research_team_status("completed")
+                if "trader_investment_plan" in chunk and chunk["trader_investment_plan"]:
+                    st.session_state.report_sections["trader_investment_plan"] = chunk[
+                        "trader_investment_plan"
+                    ]
                     # Set first risk analyst to in_progress
                     update_agent_status("Risky Analyst", "in_progress")
+                    # Event milestone: trader plan ready
+                    _mark_progress("trader_plan")
 
-            # Trading Team
-            if "trader_investment_plan" in chunk and chunk["trader_investment_plan"]:
-                st.session_state.report_sections["trader_investment_plan"] = chunk[
-                    "trader_investment_plan"
-                ]
-                # Set first risk analyst to in_progress
-                update_agent_status("Risky Analyst", "in_progress")
+                # Risk Management Team - Handle Risk Debate State (proper scope)
+                if "risk_debate_state" in chunk and chunk["risk_debate_state"]:
+                    risk_state = chunk["risk_debate_state"]
 
-            # Risk Management Team - Handle Risk Debate State
-            if "risk_debate_state" in chunk and chunk["risk_debate_state"]:
-                risk_state = chunk["risk_debate_state"]
+                    # Update Risky Analyst status and report
+                    if (
+                        "current_risky_response" in risk_state
+                        and risk_state["current_risky_response"]
+                    ):
+                        update_agent_status("Risky Analyst", "in_progress")
+                        timestamp = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{timestamp} [Reasoning] Risky Analyst: {risk_state['current_risky_response'][:100]}..."
+                        )
+                        st.session_state.report_sections["final_trade_decision"] = (
+                            f"### Risky Analyst Analysis\n{risk_state['current_risky_response']}"
+                        )
+                        # Event milestone: risk (risky) contribution
+                        _mark_progress("risk_risky")
 
-                # Update Risky Analyst status and report
-                if (
-                    "current_risky_response" in risk_state
-                    and risk_state["current_risky_response"]
-                ):
-                    update_agent_status("Risky Analyst", "in_progress")
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    st.session_state.progress_messages.appendleft(
-                        f"{timestamp} [Reasoning] Risky Analyst: {risk_state['current_risky_response'][:100]}..."
-                    )
-                    st.session_state.report_sections["final_trade_decision"] = (
-                        f"### Risky Analyst Analysis\n{risk_state['current_risky_response']}"
-                    )
+                    # Update Safe Analyst status and report
+                    if (
+                        "current_safe_response" in risk_state
+                        and risk_state["current_safe_response"]
+                    ):
+                        update_agent_status("Safe Analyst", "in_progress")
+                        timestamp = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{timestamp} [Reasoning] Safe Analyst: {risk_state['current_safe_response'][:100]}..."
+                        )
+                        st.session_state.report_sections["final_trade_decision"] = (
+                            f"### Safe Analyst Analysis\n{risk_state['current_safe_response']}"
+                        )
+                        # Event milestone: risk (safe) contribution
+                        _mark_progress("risk_safe")
 
-                # Update Safe Analyst status and report
-                if (
-                    "current_safe_response" in risk_state
-                    and risk_state["current_safe_response"]
-                ):
-                    update_agent_status("Safe Analyst", "in_progress")
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    st.session_state.progress_messages.appendleft(
-                        f"{timestamp} [Reasoning] Safe Analyst: {risk_state['current_safe_response'][:100]}..."
-                    )
-                    st.session_state.report_sections["final_trade_decision"] = (
-                        f"### Safe Analyst Analysis\n{risk_state['current_safe_response']}"
-                    )
+                    # Update Neutral Analyst status and report
+                    if (
+                        "current_neutral_response" in risk_state
+                        and risk_state["current_neutral_response"]
+                    ):
+                        update_agent_status("Neutral Analyst", "in_progress")
+                        timestamp = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{timestamp} [Reasoning] Neutral Analyst: {risk_state['current_neutral_response'][:100]}..."
+                        )
+                        st.session_state.report_sections["final_trade_decision"] = (
+                            f"### Neutral Analyst Analysis\n{risk_state['current_neutral_response']}"
+                        )
+                        # Event milestone: risk (neutral) contribution
+                        _mark_progress("risk_neutral")
 
-                # Update Neutral Analyst status and report
-                if (
-                    "current_neutral_response" in risk_state
-                    and risk_state["current_neutral_response"]
-                ):
-                    update_agent_status("Neutral Analyst", "in_progress")
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    st.session_state.progress_messages.appendleft(
-                        f"{timestamp} [Reasoning] Neutral Analyst: {risk_state['current_neutral_response'][:100]}..."
-                    )
-                    st.session_state.report_sections["final_trade_decision"] = (
-                        f"### Neutral Analyst Analysis\n{risk_state['current_neutral_response']}"
-                    )
-
-                # Update Portfolio Manager status and final decision
-                if "judge_decision" in risk_state and risk_state["judge_decision"]:
-                    update_agent_status("Portfolio Manager", "in_progress")
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    st.session_state.progress_messages.appendleft(
-                        f"{timestamp} [Reasoning] Portfolio Manager: {risk_state['judge_decision'][:100]}..."
-                    )
-                    st.session_state.report_sections["final_trade_decision"] = (
-                        f"### Portfolio Manager Decision\n{risk_state['judge_decision']}"
-                    )
-                    # Mark risk analysts as completed
-                    update_agent_status("Risky Analyst", "completed")
-                    update_agent_status("Safe Analyst", "completed")
-                    update_agent_status("Neutral Analyst", "completed")
-                    update_agent_status("Portfolio Manager", "completed")
+                    # Update Portfolio Manager status and final decision
+                    if "judge_decision" in risk_state and risk_state["judge_decision"]:
+                        update_agent_status("Portfolio Manager", "in_progress")
+                        timestamp = datetime.now().strftime("%H:%M:%S")
+                        st.session_state.progress_messages.appendleft(
+                            f"{timestamp} [Reasoning] Portfolio Manager: {risk_state['judge_decision'][:100]}..."
+                        )
+                        st.session_state.report_sections["final_trade_decision"] = (
+                            f"### Portfolio Manager Decision\n{risk_state['judge_decision']}"
+                        )
+                        # Mark risk analysts as completed
+                        update_agent_status("Risky Analyst", "completed")
+                        update_agent_status("Safe Analyst", "completed")
+                        update_agent_status("Neutral Analyst", "completed")
+                        update_agent_status("Portfolio Manager", "completed")
+                        # Event milestone: portfolio judge decision
+                        _mark_progress("portfolio_judge")
 
                 # Update UI displays inside the streaming loop
                 # Display combined messages and tool calls
@@ -1235,7 +1354,10 @@ def run_real_analysis(
                 progress_val = min(progress_val, 0.99)
             else:
                 progress_val = 0
+            # Prevent regression: never drop below last_progress
+            progress_val = max(progress_val, st.session_state.get("last_progress", 0.0))
             progress_bar.progress(progress_val)
+            st.session_state["last_progress"] = progress_val
 
             # Update status text
             in_progress_agents = [
@@ -1315,8 +1437,23 @@ def run_real_analysis(
             }
 
             st.session_state.analysis_running = False
+            # Clear run configuration tooltip after completion
+            if "current_run_config_tip" in st.session_state:
+                del st.session_state["current_run_config_tip"]
+            # Event milestone: finalized
+            _mark_progress("finalized")
+            # Ensure progress is full and reset last_progress for next run
+            try:
+                progress_bar.progress(1.0)
+            except Exception:
+                pass
+            # Clear tracker state for next run
+            st.session_state.pop("last_progress", None)
+            st.session_state.pop("progress_bar", None)
+            st.session_state.pop("progress_events_done", None)
+            st.session_state.pop("progress_events_list", None)
+            st.session_state.pop("progress_total_events", None)
             status_text.text("✅ Analysis complete!")
-            progress_bar.progress(1.0)
             st.success("🎉 Real analysis completed successfully!")
             # Lifecycle log: AnalysisComplete
             if st.session_state.get("ui_debug_mode"):
@@ -1332,6 +1469,15 @@ def run_real_analysis(
     except Exception as e:
         st.error(f"Analysis failed: {str(e)}")
         st.session_state.analysis_running = False
+        # Clear run configuration tooltip on failure as well
+        if "current_run_config_tip" in st.session_state:
+            del st.session_state["current_run_config_tip"]
+        # Reset progress floor for next run
+        st.session_state.pop("last_progress", None)
+        st.session_state.pop("progress_bar", None)
+        st.session_state.pop("progress_events_done", None)
+        st.session_state.pop("progress_events_list", None)
+        st.session_state.pop("progress_total_events", None)
         st.session_state.last_error = str(e)
         if debug_mode:
             st.exception(e)
