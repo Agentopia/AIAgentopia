@@ -180,6 +180,9 @@ def init_session_state():
     """Initialize session state variables"""
     if "analysis_running" not in st.session_state:
         st.session_state.analysis_running = False
+        
+    if "agent_panel_visible" not in st.session_state:
+        st.session_state.agent_panel_visible = True
 
     if "progress_messages" not in st.session_state:
         st.session_state.progress_messages = deque(maxlen=100)
@@ -1509,20 +1512,13 @@ with st.sidebar:
     else:
         sidebar_config = fallback_render_sidebar()
 
-# Main layout
-st.markdown('<div class="full-width-container">', unsafe_allow_html=True)
-
-# Create main layout
-title_col1, title_col2 = st.columns([8, 2], gap="small")
-with title_col1:
-    st.header("🎯 Trading Analysis Dashboard")
-with title_col2:
-    st.header("🤖 Agent Status")
-
-main_content_col, agent_status_col = st.columns([8, 2], gap="small")
+# Create main layout container with two columns
+main_content_col, agent_status_col = st.columns([7, 3])
 
 # Main content area
 with main_content_col:
+    st.header("🎯 Trading Analysis Dashboard")
+
     # Analysis parameters
     if COMPONENTS_AVAILABLE:
         analysis_params = render_analysis_parameters()
@@ -1658,9 +1654,153 @@ with main_content_col:
             st.session_state.analysis_running = False
             st.session_state.last_error = str(e)
             st.rerun()
+    
+    # Results section - moved inside main content column
+    if st.session_state.analysis_results and not st.session_state.analysis_running:
+        # Pre-generate export content
+        markdown_content = generate_markdown_report(st.session_state.analysis_results)
+        markdown_filename = f"trading_analysis_{st.session_state.analysis_results.get('symbol', 'report')}_{st.session_state.analysis_results.get('date', 'unknown')}.md"
 
-# Agent status sidebar - Create placeholders for dynamic updates
+        jsonl_content = generate_jsonl_log(
+            st.session_state.analysis_results,
+            st.session_state.progress_messages,
+            st.session_state.tool_calls,
+        )
+        jsonl_filename = f"trading_log_{st.session_state.analysis_results.get('symbol', 'log')}_{st.session_state.analysis_results.get('date', 'unknown')}.jsonl"
+
+        decision_summary = get_decision_summary(st.session_state.analysis_results)
+
+        # Header with inline export buttons - single row layout with reduced button width
+        col1, col2, col3, col4, col5 = st.columns([2.5, 0.9, 0.9, 0.9, 1.8], gap="small")
+
+        with col1:
+            st.markdown(
+                '<h2 style="margin-top: 0; margin-bottom: 0; white-space: nowrap; line-height: 2.5rem;">📊 Analysis Results</h2>',
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                '<div style="display: flex; align-items: center; height: 2.5rem;">',
+                unsafe_allow_html=True,
+            )
+            st.download_button(
+                label="📄 Full Report",
+                data=markdown_content,
+                file_name=markdown_filename,
+                mime="text/markdown",
+                use_container_width=True,
+                type="secondary",
+                help="Download complete analysis in Markdown format",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with col3:
+            st.markdown(
+                '<div style="display: flex; align-items: center; height: 2.5rem;">',
+                unsafe_allow_html=True,
+            )
+            st.download_button(
+                label="📋 Execution Log",
+                data=jsonl_content,
+                file_name=jsonl_filename,
+                mime="application/jsonl",
+                use_container_width=True,
+                type="secondary",
+                help="Download detailed execution log in JSONL format",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with col4:
+            st.markdown(
+                '<div style="display: flex; align-items: center; height: 2.5rem;">',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "🎯 Quick Summary",
+                use_container_width=True,
+                type="secondary",
+                help="Toggle quick decision summary display",
+                key="quick_summary_toggle"
+            ):
+                st.session_state.show_quick_summary = not st.session_state.get(
+                    "show_quick_summary", False
+                )
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Show summary only when explicitly requested (not by default)
+        if st.session_state.get("show_quick_summary", False):
+            st.markdown("**Decision Summary:**")
+            st.code(decision_summary, language=None)
+
+        if COMPONENTS_AVAILABLE:
+            render_analysis_report(
+                st.session_state.analysis_results, analysis_params.get("debug_mode", False)
+            )
+        else:
+            # Fallback results display
+            results = st.session_state.analysis_results
+            st.subheader(f"Results for {results['symbol']} - {results['date']}")
+
+            result_data = results.get("result", {})
+
+            if result_data.get("market_report"):
+                st.subheader("📈 Market Analysis")
+                st.markdown(result_data["market_report"])
+
+            if result_data.get("news_report"):
+                st.subheader("📰 News Analysis")
+                st.markdown(result_data["news_report"])
+
+            if result_data.get("fundamentals_report"):
+                st.subheader("💰 Fundamentals")
+                st.markdown(result_data["fundamentals_report"])
+
+            if result_data.get("trader_investment_plan"):
+                st.subheader("🎯 Investment Decision")
+                st.markdown(result_data["trader_investment_plan"])
+
+        # JavaScript to directly style export buttons
+        st.markdown(
+            """
+        <script>
+        function styleExportButtons() {
+            const buttons = document.querySelectorAll('button[kind="secondary"]');
+            buttons.forEach(btn => {
+                const text = btn.textContent || btn.innerText;
+                if (text.includes('📄')) {
+                    btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                    btn.style.color = 'white';
+                    btn.style.border = '1px solid #3b82f6';
+                } else if (text.includes('📋')) {
+                    btn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+                    btn.style.color = 'white';
+                    btn.style.border = '1px solid #8b5cf6';
+                } else if (text.includes('🎯')) {
+                    btn.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+                    btn.style.color = 'white';
+                    btn.style.border = '1px solid #06b6d4';
+                }
+            });
+        }
+
+        // Run immediately and on DOM changes
+        styleExportButtons();
+        setTimeout(styleExportButtons, 100);
+        setTimeout(styleExportButtons, 500);
+
+        // Watch for DOM changes
+        const observer = new MutationObserver(styleExportButtons);
+        observer.observe(document.body, { childList: true, subtree: true });
+        </script>
+        """,
+            unsafe_allow_html=True,
+        )
+
+# Agent status panel
 with agent_status_col:
+    st.markdown("### 🤖 Agent Status")
     # Agent status cards
     teams = {
         "📈 Analyst Team": [
@@ -1694,147 +1834,6 @@ with agent_status_col:
                 # Initial render
                 status = st.session_state.agent_status[agent]
                 render_agent_button(placeholder, agent, status)
-
-# Results section
-if st.session_state.analysis_results and not st.session_state.analysis_running:
-    # Pre-generate export content
-    markdown_content = generate_markdown_report(st.session_state.analysis_results)
-    markdown_filename = f"trading_analysis_{st.session_state.analysis_results.get('symbol', 'report')}_{st.session_state.analysis_results.get('date', 'unknown')}.md"
-
-    jsonl_content = generate_jsonl_log(
-        st.session_state.analysis_results,
-        st.session_state.progress_messages,
-        st.session_state.tool_calls,
-    )
-    jsonl_filename = f"trading_log_{st.session_state.analysis_results.get('symbol', 'log')}_{st.session_state.analysis_results.get('date', 'unknown')}.jsonl"
-
-    decision_summary = get_decision_summary(st.session_state.analysis_results)
-
-    # Header with inline export buttons - single row layout with reduced button width
-    col1, col2, col3, col4, col5 = st.columns([2.5, 0.9, 0.9, 0.9, 1.8], gap="small")
-
-    with col1:
-        st.markdown(
-            '<h2 style="margin-top: 0; margin-bottom: 0; white-space: nowrap; line-height: 2.5rem;">📊 Analysis Results</h2>',
-            unsafe_allow_html=True,
-        )
-
-    with col2:
-        st.markdown(
-            '<div style="display: flex; align-items: center; height: 2.5rem;">',
-            unsafe_allow_html=True,
-        )
-        st.download_button(
-            label="📄 Full Report",
-            data=markdown_content,
-            file_name=markdown_filename,
-            mime="text/markdown",
-            use_container_width=True,
-            type="secondary",
-            help="Download complete analysis in Markdown format",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col3:
-        st.markdown(
-            '<div style="display: flex; align-items: center; height: 2.5rem;">',
-            unsafe_allow_html=True,
-        )
-        st.download_button(
-            label="📋 Execution Log",
-            data=jsonl_content,
-            file_name=jsonl_filename,
-            mime="application/jsonl",
-            use_container_width=True,
-            type="secondary",
-            help="Download detailed execution log in JSONL format",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col4:
-        st.markdown(
-            '<div style="display: flex; align-items: center; height: 2.5rem;">',
-            unsafe_allow_html=True,
-        )
-        if st.button(
-            "🎯 Quick Summary",
-            use_container_width=True,
-            type="secondary",
-            help="Toggle quick decision summary display",
-        ):
-            st.session_state.show_quick_summary = not st.session_state.get(
-                "show_quick_summary", False
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # JavaScript to directly style export buttons
-    st.markdown(
-        """
-    <script>
-    function styleExportButtons() {
-        const buttons = document.querySelectorAll('button[kind="secondary"]');
-        buttons.forEach(btn => {
-            const text = btn.textContent || btn.innerText;
-            if (text.includes('📄')) {
-                btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
-                btn.style.color = 'white';
-                btn.style.border = '1px solid #3b82f6';
-            } else if (text.includes('📋')) {
-                btn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
-                btn.style.color = 'white';
-                btn.style.border = '1px solid #8b5cf6';
-            } else if (text.includes('🎯')) {
-                btn.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
-                btn.style.color = 'white';
-                btn.style.border = '1px solid #06b6d4';
-            }
-        });
-    }
-
-    // Run immediately and on DOM changes
-    styleExportButtons();
-    setTimeout(styleExportButtons, 100);
-    setTimeout(styleExportButtons, 500);
-
-    // Watch for DOM changes
-    const observer = new MutationObserver(styleExportButtons);
-    observer.observe(document.body, { childList: true, subtree: true });
-    </script>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    # Show summary only when explicitly requested (not by default)
-    if st.session_state.get("show_summary", False):
-        st.markdown("**Decision Summary:**")
-        st.code(decision_summary, language=None)
-
-    if COMPONENTS_AVAILABLE:
-        render_analysis_report(
-            st.session_state.analysis_results, analysis_params.get("debug_mode", False)
-        )
-    else:
-        # Fallback results display
-        results = st.session_state.analysis_results
-        st.subheader(f"Results for {results['symbol']} - {results['date']}")
-
-        result_data = results.get("result", {})
-
-        if result_data.get("market_report"):
-            st.subheader("📈 Market Analysis")
-            st.markdown(result_data["market_report"])
-
-        if result_data.get("news_report"):
-            st.subheader("📰 News Analysis")
-            st.markdown(result_data["news_report"])
-
-        if result_data.get("fundamentals_report"):
-            st.subheader("💰 Fundamentals")
-            st.markdown(result_data["fundamentals_report"])
-
-        if result_data.get("trader_investment_plan"):
-            st.subheader("🎯 Investment Decision")
-            st.markdown(result_data["trader_investment_plan"])
 
 # Error display
 if st.session_state.get("last_error") and not st.session_state.analysis_running:
