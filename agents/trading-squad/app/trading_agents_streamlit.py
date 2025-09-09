@@ -820,9 +820,7 @@ def run_real_analysis(
         messages_container.markdown("- Waiting for analysis to start...")
 
         # (Removed main-area Tooling section; Tool Calls now lives in sidebar)
-
-        st.markdown("### 📊 Current Report")
-        report_container = st.empty()
+        # (Removed Current Report section; moved to Agent Status side pane)
 
     # Configure TradingAgents - matching CLI config
     config = DEFAULT_CONFIG.copy()
@@ -1179,9 +1177,10 @@ def run_real_analysis(
                     _mark_progress("fundamentals_report")
 
                 # Update partial report after any analyst section change
-                report_container.markdown(
-                    build_partial_report_md(st.session_state.report_sections)
-                )
+                if "report_container" in st.session_state:
+                    st.session_state.report_container.markdown(
+                        build_partial_report_md(st.session_state.report_sections)
+                    )
 
                 # Update progress (reflect in-progress work for better UX)
                 completed_count = sum(
@@ -1335,14 +1334,16 @@ def run_real_analysis(
                 messages_container.markdown("\n".join(all_messages[:15]))
 
                 # Update partial report during risk/research updates
-                report_container.markdown(
-                    build_partial_report_md(st.session_state.report_sections)
-                )
+                if "report_container" in st.session_state:
+                    st.session_state.report_container.markdown(
+                        build_partial_report_md(st.session_state.report_sections)
+                    )
 
             # Update partial report at the end of the loop iteration as well
-            report_container.markdown(
-                build_partial_report_md(st.session_state.report_sections)
-            )
+            if "report_container" in st.session_state:
+                st.session_state.report_container.markdown(
+                    build_partial_report_md(st.session_state.report_sections)
+                )
 
             # Update progress (reflect in-progress work for better UX)
             completed_count = sum(
@@ -1801,6 +1802,7 @@ with main_content_col:
 # Agent status panel
 with agent_status_col:
     st.markdown("### 🤖 Agent Status")
+    
     # Agent status cards
     teams = {
         "📈 Analyst Team": [
@@ -1834,6 +1836,12 @@ with agent_status_col:
                 # Initial render
                 status = st.session_state.agent_status[agent]
                 render_agent_button(placeholder, agent, status)
+
+    # Current Report section (moved to bottom of side pane for better UX)
+    st.markdown("### 📊 Current Report")
+    report_container = st.empty()
+    # Store in session state for access from analysis function
+    st.session_state.report_container = report_container
 
 # Error display
 if st.session_state.get("last_error") and not st.session_state.analysis_running:
