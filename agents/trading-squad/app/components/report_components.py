@@ -103,11 +103,187 @@ def normalize_final_state_keys(final_state: dict) -> dict:
 def render_analysis_report(results, debug_mode):
     """Render the full analysis report with tabs for each section."""
 
-    # Results Header with Metrics - optimized font sizes
-    st.markdown("### 📈 Complete Analysis Report")
-    st.caption(f"Analysis for {results['symbol']} completed on {results['date']}")
+    # Results Header with Metrics
 
-    # Key Metrics Row - more compact
+    # Force CSS styles with JavaScript fallback
+    st.markdown("""
+    <style>
+    /* === ANALYSIS RESULTS VISUAL HIERARCHY === */
+    
+    /* Tab Navigation - 1.0rem, semi-bold with higher specificity */
+    div[data-testid="stTabs"] div[data-baseweb="tab-list"] button,
+    .stTabs [data-baseweb="tab-list"] button,
+    [data-baseweb="tab-list"] button {
+        font-size: 1.0rem !important;
+        font-weight: 600 !important;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    /* Metric containers - bright yellow values, white labels with higher specificity */
+    div[data-testid="metric-container"] div[data-testid="metric-value"],
+    [data-testid="metric-container"] [data-testid="metric-value"] {
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+        color: #fbbf24 !important;
+    }
+    
+    div[data-testid="metric-container"] div[data-testid="metric-label"],
+    [data-testid="metric-container"] [data-testid="metric-label"] {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+    }
+    </style>
+    
+    <script>
+    // JavaScript to force styles when CSS fails
+    function forceAnalysisResultsStyles() {
+        // Force tab button styles - bold text, red when selected, white when not
+        const tabButtons = document.querySelectorAll('[data-baseweb="tab-list"] button');
+        tabButtons.forEach(btn => {
+            btn.style.setProperty('font-size', '1.0rem', 'important');
+            btn.style.setProperty('font-weight', '700', 'important'); // Bold
+            
+            // Check if tab is selected (has aria-selected="true" or active class)
+            const isSelected = btn.getAttribute('aria-selected') === 'true' || 
+                             btn.classList.contains('active') ||
+                             btn.hasAttribute('data-selected');
+            
+            if (isSelected) {
+                btn.style.setProperty('color', '#ef4444', 'important'); // Red when selected
+            } else {
+                btn.style.setProperty('color', '#ffffff', 'important'); // White when not selected
+            }
+        });
+        
+        // Force metric value styles - target all possible selectors
+        const metricValues = document.querySelectorAll('[data-testid="metric-value"], .metric-value, [class*="metric"] [class*="value"]');
+        metricValues.forEach(val => {
+            val.style.setProperty('font-size', '0.875rem', 'important');
+            val.style.setProperty('font-weight', '600', 'important');
+            val.style.setProperty('color', '#fbbf24', 'important');
+        });
+        
+        // Also target any large text in metric containers
+        const metricContainers = document.querySelectorAll('[data-testid="metric-container"]');
+        metricContainers.forEach(container => {
+            const allElements = container.querySelectorAll('*');
+            allElements.forEach(el => {
+                if (el.textContent && (el.textContent.includes('CRCL') || el.textContent.includes('2025-') || el.textContent.includes('BUY') || el.textContent.includes('SELL') || el.textContent.includes(':'))) {
+                    el.style.setProperty('font-size', '0.875rem', 'important');
+                    el.style.setProperty('font-weight', '600', 'important');
+                    el.style.setProperty('color', '#fbbf24', 'important');
+                }
+            });
+        });
+        
+        // Force metric label styles
+        const metricLabels = document.querySelectorAll('[data-testid="metric-label"]');
+        metricLabels.forEach(label => {
+            label.style.setProperty('font-size', '1.1rem', 'important');
+            label.style.setProperty('font-weight', '600', 'important');
+            label.style.setProperty('color', '#ffffff', 'important');
+        });
+        
+        // Force all report body text to be white
+        const reportContainer = document.querySelector('[data-testid="stTabs"]');
+        if (reportContainer) {
+            const allTextElements = reportContainer.querySelectorAll('*');
+            allTextElements.forEach(el => {
+                // Skip elements that should keep their specific colors (like success/info boxes)
+                if (!el.closest('[data-testid="stAlert"]') && 
+                    !el.closest('[data-testid="stSuccess"]') && 
+                    !el.closest('[data-testid="stInfo"]') &&
+                    !el.closest('[data-testid="metric-value"]')) {
+                    
+                    // Force white color for text content
+                    if (el.textContent && el.textContent.trim()) {
+                        el.style.setProperty('color', '#ffffff', 'important');
+                    }
+                }
+            });
+        }
+    }
+    
+    // Run immediately and repeatedly
+    setTimeout(forceAnalysisResultsStyles, 100);
+    setTimeout(forceAnalysisResultsStyles, 500);
+    setTimeout(forceAnalysisResultsStyles, 1000);
+    setInterval(forceAnalysisResultsStyles, 2000);
+    </script>
+    """, unsafe_allow_html=True)
+    
+    # Additional CSS for tab content styling
+    st.markdown("""
+    <style>
+    /* Tab styling */
+    [data-baseweb="tab-list"] button {
+        font-size: 1.0rem !important;
+        font-weight: 700 !important; /* Bold */
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0.75rem 1.5rem !important;
+        margin: 0 0.25rem !important;
+        border-radius: 0.5rem !important;
+        transition: all 0.2s ease !important;
+        color: #ffffff !important; /* White by default */
+    }
+    
+    [data-baseweb="tab-list"] button[aria-selected="true"] {
+        background-color: rgba(239, 68, 68, 0.1) !important;
+        border-bottom: 2px solid #ef4444 !important;
+        color: #ef4444 !important; /* Red when selected */
+    }
+    
+    /* Force all text in report tabs to be white */
+    [data-testid="stTabs"] * {
+        color: #ffffff !important;
+    }
+    
+    /* Preserve specific component colors */
+    [data-testid="stAlert"] *, 
+    [data-testid="stSuccess"] *, 
+    [data-testid="stInfo"] *,
+    [data-testid="stWarning"] *,
+    [data-testid="stError"] * {
+        color: inherit !important;
+    }
+    
+    /* Section headers within tabs - moderate size */
+    .stTabs h2 {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.75rem !important;
+        color: #ffffff !important;
+    }
+    
+    .stTabs h4 {
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+        color: #ffffff !important;
+    }
+    
+    /* Body text in tabs */
+    .stTabs p {
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
+        color: #ffffff !important;
+    }
+    
+    /* Alert boxes */
+    .stAlert {
+        font-size: 0.875rem !important;
+    }
+    
+    /* Lists */
+    .stTabs li {
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
         st.metric("Symbol", results["symbol"])
@@ -139,11 +315,58 @@ def render_analysis_report(results, debug_mode):
             decision_summary = "ANALYZE"
         st.metric("Decision", decision_summary)
 
+    # Add comprehensive CSS for consistent Analysis Results font sizing
+    st.markdown("""
+    <style>
+    /* Consistent font sizing for Analysis Results section */
+    .stTabs [data-baseweb="tab-list"] {
+        font-size: 0.875rem !important;
+    }
+    
+    /* Reduce subheader sizes */
+    .stMarkdown h2 {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Reduce h4 header sizes */
+    .stMarkdown h4 {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+        margin-top: 1rem !important;
+    }
+    
+    /* Consistent body text in report content */
+    .stMarkdown p {
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    /* Reduce italic text size */
+    .stMarkdown em {
+        font-size: 0.8rem !important;
+    }
+    
+    /* Success/info/warning boxes */
+    .stAlert {
+        font-size: 0.875rem !important;
+    }
+    
+    /* Tab content */
+    .stTabs [data-baseweb="tab-panel"] {
+        font-size: 0.875rem !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Complete Team-Based Report Sections (100% CLI feature parity)
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         [
             "🎯 Final Decision",
-            "📊 I. Analyst Team",
+            "📊 I. Analyst Team", 
             "🔍 II. Research Team",
             "💰 III. Trading Team",
             "⚖️ IV. Risk Management",

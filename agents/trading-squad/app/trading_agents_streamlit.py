@@ -496,8 +496,8 @@ def render_progress_header(header_placeholder):
     html = (
         "<div style=\"display:flex; align-items:flex-end; justify-content:space-between;\">"
         "  <div>"
-        "    <h3 style=\"margin:0 0 0.25rem 0\">🔄 Analysis in Progress...</h3>"
-        f"    <div style=\"font-size:0.9rem; color:#9ca3af; margin-top:0.1rem\">({done}/{total} analysts completed)</div>"
+        "    <h3 class=\"section-title-progress\" style=\"margin:0 0 0.25rem 0;\">🔄 Analysis in Progress...</h3>"
+        f"    <div style=\"font-size:0.875rem; color:#9ca3af; margin-top:0.1rem\">({done}/{total} analysts completed)</div>"
         "  </div>"
         f"  <div style=\"padding-left:0.5rem\">{tip_html}</div>"
         "</div>"
@@ -813,7 +813,137 @@ def run_real_analysis(
             pass
         status_text = st.empty()
 
-        st.markdown("### 💬 Live Analysis Feed")
+        st.markdown('<h3 class="section-title-info">💬 Live Analysis Feed</h3>', unsafe_allow_html=True)
+        # Systematic CSS definitions for different text types
+        st.markdown("""
+        <style>
+        /* === SYSTEMATIC FONT SIZE DEFINITIONS === */
+        
+        /* Main Section Titles */
+        .section-title-primary {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #22c55e !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        /* Progress Section Titles */
+        .section-title-progress {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #e74c3c !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* Info Section Titles */
+        .section-title-info {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #1f77b4 !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        /* Content Text */
+        .content-text {
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+            font-weight: normal !important;
+        }
+        
+        /* Feed Messages */
+        .feed-message {
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+            font-weight: normal !important;
+        }
+        
+        /* Status Text */
+        .status-text {
+            font-size: 0.875rem !important;
+            color: #9ca3af !important;
+            font-weight: normal !important;
+        }
+        
+        /* === APPLY TO STREAMLIT ELEMENTS === */
+        
+        /* Target all markdown content by default */
+        .stMarkdown p, .stMarkdown div, .stMarkdown span, .stMarkdown li {
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+            font-weight: normal !important;
+        }
+        
+        /* Override unwanted large headers in content areas */
+        .stMarkdown h1:not(.section-title-primary):not(.section-title-progress):not(.section-title-info),
+        .stMarkdown h2:not(.section-title-primary):not(.section-title-progress):not(.section-title-info),
+        .stMarkdown h4:not(.section-title-primary):not(.section-title-progress):not(.section-title-info) {
+            font-size: 0.875rem !important;
+            font-weight: normal !important;
+        }
+        </style>
+        <script>
+        // JavaScript to fix oversized content while preserving section titles
+        function resizeAnalysisFeed() {
+            // Target content elements but preserve section titles
+            const allElements = document.querySelectorAll('p, div, span, li');
+            allElements.forEach(el => {
+                // Skip section titles but target content
+                if (el.textContent && 
+                    !el.textContent.includes('💬 Live Analysis Feed') &&
+                    !el.textContent.includes('🔄 Analysis in Progress') &&
+                    !el.closest('h3') && // Don't target elements inside h3 tags
+                    (el.textContent.includes('Total records') || 
+                     el.textContent.includes('Data retrieved') ||
+                     el.textContent.includes('Market Analyst') ||
+                     el.textContent.includes('Social Analyst') ||
+                     el.textContent.includes('News Analyst') ||
+                     el.textContent.includes('Fundamentals Analyst') ||
+                     el.textContent.includes('Provider:') ||
+                     el.textContent.includes('Model:') ||
+                     el.textContent.includes('Base URL:') ||
+                     el.textContent.includes('Selected') ||
+                     /\\d{2}:\\d{2}:\\d{2}/.test(el.textContent))) {
+                    
+                    // Only resize content, not titles
+                    el.style.setProperty('font-size', '0.875rem', 'important');
+                    el.style.setProperty('font-weight', 'normal', 'important');
+                    el.style.setProperty('line-height', '1.4', 'important');
+                }
+            });
+            
+            // Specifically target problem elements but preserve titles
+            const problemTexts = ['Total records:', 'Data retrieved on:'];
+            problemTexts.forEach(text => {
+                const elements = Array.from(document.querySelectorAll('*')).filter(el => 
+                    el.textContent && 
+                    el.textContent.includes(text) &&
+                    !el.closest('h3') // Don't target if inside h3
+                );
+                elements.forEach(el => {
+                    el.style.setProperty('font-size', '0.875rem', 'important');
+                    el.style.setProperty('font-weight', 'normal', 'important');
+                });
+            });
+            
+            // Ensure section titles remain large
+            const sectionTitles = document.querySelectorAll('h3');
+            sectionTitles.forEach(title => {
+                if (title.textContent && 
+                    (title.textContent.includes('💬 Live Analysis Feed') ||
+                     title.textContent.includes('🔄 Analysis in Progress'))) {
+                    title.style.setProperty('font-size', '1.5rem', 'important');
+                    title.style.setProperty('font-weight', '700', 'important');
+                }
+            });
+        }
+        
+        // Run more frequently to catch dynamic content
+        setTimeout(resizeAnalysisFeed, 50);
+        setTimeout(resizeAnalysisFeed, 200);
+        setTimeout(resizeAnalysisFeed, 500);
+        setInterval(resizeAnalysisFeed, 500);
+        </script>
+        """, unsafe_allow_html=True)
         messages_container = st.empty()
 
         # Initialize with a placeholder message to verify container works
@@ -1671,12 +1801,12 @@ with main_content_col:
 
         decision_summary = get_decision_summary(st.session_state.analysis_results)
 
-        # Header with inline export buttons - single row layout with reduced button width
-        col1, col2, col3, col4, col5 = st.columns([2.5, 0.9, 0.9, 0.9, 1.8], gap="small")
+        # Header with evenly spaced export buttons
+        col1, col2, col3, col4 = st.columns([3, 1, 1, 1], gap="medium")
 
         with col1:
             st.markdown(
-                '<h2 style="margin-top: 0; margin-bottom: 0; white-space: nowrap; line-height: 2.5rem;">📊 Analysis Results</h2>',
+                '<h1 style="font-size: 1.5rem; font-weight: 700; color: #22c55e; margin-top: 0; margin-bottom: 0; white-space: nowrap; line-height: 2.5rem;">📊 Analysis Results</h1>',
                 unsafe_allow_html=True,
             )
 
