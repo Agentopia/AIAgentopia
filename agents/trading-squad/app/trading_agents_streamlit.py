@@ -180,6 +180,9 @@ def init_session_state():
     """Initialize session state variables"""
     if "analysis_running" not in st.session_state:
         st.session_state.analysis_running = False
+        
+    if "agent_panel_visible" not in st.session_state:
+        st.session_state.agent_panel_visible = True
 
     if "progress_messages" not in st.session_state:
         st.session_state.progress_messages = deque(maxlen=100)
@@ -493,8 +496,8 @@ def render_progress_header(header_placeholder):
     html = (
         "<div style=\"display:flex; align-items:flex-end; justify-content:space-between;\">"
         "  <div>"
-        "    <h3 style=\"margin:0 0 0.25rem 0\">🔄 Analysis in Progress...</h3>"
-        f"    <div style=\"font-size:0.9rem; color:#9ca3af; margin-top:0.1rem\">({done}/{total} analysts completed)</div>"
+        "    <h3 class=\"section-title-progress\" style=\"margin:0 0 0.25rem 0;\">🔄 Analysis in Progress...</h3>"
+        f"    <div style=\"font-size:0.875rem; color:#9ca3af; margin-top:0.1rem\">({done}/{total} analysts completed)</div>"
         "  </div>"
         f"  <div style=\"padding-left:0.5rem\">{tip_html}</div>"
         "</div>"
@@ -810,16 +813,144 @@ def run_real_analysis(
             pass
         status_text = st.empty()
 
-        st.markdown("### 💬 Live Analysis Feed")
+        st.markdown('<h3 class="section-title-info">💬 Live Analysis Feed</h3>', unsafe_allow_html=True)
+        # Systematic CSS definitions for different text types
+        st.markdown("""
+        <style>
+        /* === SYSTEMATIC FONT SIZE DEFINITIONS === */
+        
+        /* Main Section Titles */
+        .section-title-primary {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #22c55e !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        /* Progress Section Titles */
+        .section-title-progress {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #e74c3c !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* Info Section Titles */
+        .section-title-info {
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+            color: #1f77b4 !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        /* Content Text */
+        .content-text {
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+            font-weight: normal !important;
+        }
+        
+        /* Feed Messages */
+        .feed-message {
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+            font-weight: normal !important;
+        }
+        
+        /* Status Text */
+        .status-text {
+            font-size: 0.875rem !important;
+            color: #9ca3af !important;
+            font-weight: normal !important;
+        }
+        
+        /* === APPLY TO STREAMLIT ELEMENTS === */
+        
+        /* Target all markdown content by default */
+        .stMarkdown p, .stMarkdown div, .stMarkdown span, .stMarkdown li {
+            font-size: 0.875rem !important;
+            line-height: 1.4 !important;
+            font-weight: normal !important;
+        }
+        
+        /* Override unwanted large headers in content areas */
+        .stMarkdown h1:not(.section-title-primary):not(.section-title-progress):not(.section-title-info),
+        .stMarkdown h2:not(.section-title-primary):not(.section-title-progress):not(.section-title-info),
+        .stMarkdown h4:not(.section-title-primary):not(.section-title-progress):not(.section-title-info) {
+            font-size: 0.875rem !important;
+            font-weight: normal !important;
+        }
+        </style>
+        <script>
+        // JavaScript to fix oversized content while preserving section titles
+        function resizeAnalysisFeed() {
+            // Target content elements but preserve section titles
+            const allElements = document.querySelectorAll('p, div, span, li');
+            allElements.forEach(el => {
+                // Skip section titles but target content
+                if (el.textContent && 
+                    !el.textContent.includes('💬 Live Analysis Feed') &&
+                    !el.textContent.includes('🔄 Analysis in Progress') &&
+                    !el.closest('h3') && // Don't target elements inside h3 tags
+                    (el.textContent.includes('Total records') || 
+                     el.textContent.includes('Data retrieved') ||
+                     el.textContent.includes('Market Analyst') ||
+                     el.textContent.includes('Social Analyst') ||
+                     el.textContent.includes('News Analyst') ||
+                     el.textContent.includes('Fundamentals Analyst') ||
+                     el.textContent.includes('Provider:') ||
+                     el.textContent.includes('Model:') ||
+                     el.textContent.includes('Base URL:') ||
+                     el.textContent.includes('Selected') ||
+                     /\\d{2}:\\d{2}:\\d{2}/.test(el.textContent))) {
+                    
+                    // Only resize content, not titles
+                    el.style.setProperty('font-size', '0.875rem', 'important');
+                    el.style.setProperty('font-weight', 'normal', 'important');
+                    el.style.setProperty('line-height', '1.4', 'important');
+                }
+            });
+            
+            // Specifically target problem elements but preserve titles
+            const problemTexts = ['Total records:', 'Data retrieved on:'];
+            problemTexts.forEach(text => {
+                const elements = Array.from(document.querySelectorAll('*')).filter(el => 
+                    el.textContent && 
+                    el.textContent.includes(text) &&
+                    !el.closest('h3') // Don't target if inside h3
+                );
+                elements.forEach(el => {
+                    el.style.setProperty('font-size', '0.875rem', 'important');
+                    el.style.setProperty('font-weight', 'normal', 'important');
+                });
+            });
+            
+            // Ensure section titles remain large
+            const sectionTitles = document.querySelectorAll('h3');
+            sectionTitles.forEach(title => {
+                if (title.textContent && 
+                    (title.textContent.includes('💬 Live Analysis Feed') ||
+                     title.textContent.includes('🔄 Analysis in Progress'))) {
+                    title.style.setProperty('font-size', '1.5rem', 'important');
+                    title.style.setProperty('font-weight', '700', 'important');
+                }
+            });
+        }
+        
+        // Run more frequently to catch dynamic content
+        setTimeout(resizeAnalysisFeed, 50);
+        setTimeout(resizeAnalysisFeed, 200);
+        setTimeout(resizeAnalysisFeed, 500);
+        setInterval(resizeAnalysisFeed, 500);
+        </script>
+        """, unsafe_allow_html=True)
         messages_container = st.empty()
 
         # Initialize with a placeholder message to verify container works
         messages_container.markdown("- Waiting for analysis to start...")
 
         # (Removed main-area Tooling section; Tool Calls now lives in sidebar)
-
-        st.markdown("### 📊 Current Report")
-        report_container = st.empty()
+        # (Removed Current Report section; moved to Agent Status side pane)
 
     # Configure TradingAgents - matching CLI config
     config = DEFAULT_CONFIG.copy()
@@ -1176,9 +1307,10 @@ def run_real_analysis(
                     _mark_progress("fundamentals_report")
 
                 # Update partial report after any analyst section change
-                report_container.markdown(
-                    build_partial_report_md(st.session_state.report_sections)
-                )
+                if "report_container" in st.session_state:
+                    st.session_state.report_container.markdown(
+                        build_partial_report_md(st.session_state.report_sections)
+                    )
 
                 # Update progress (reflect in-progress work for better UX)
                 completed_count = sum(
@@ -1332,14 +1464,16 @@ def run_real_analysis(
                 messages_container.markdown("\n".join(all_messages[:15]))
 
                 # Update partial report during risk/research updates
-                report_container.markdown(
-                    build_partial_report_md(st.session_state.report_sections)
-                )
+                if "report_container" in st.session_state:
+                    st.session_state.report_container.markdown(
+                        build_partial_report_md(st.session_state.report_sections)
+                    )
 
             # Update partial report at the end of the loop iteration as well
-            report_container.markdown(
-                build_partial_report_md(st.session_state.report_sections)
-            )
+            if "report_container" in st.session_state:
+                st.session_state.report_container.markdown(
+                    build_partial_report_md(st.session_state.report_sections)
+                )
 
             # Update progress (reflect in-progress work for better UX)
             completed_count = sum(
@@ -1509,20 +1643,13 @@ with st.sidebar:
     else:
         sidebar_config = fallback_render_sidebar()
 
-# Main layout
-st.markdown('<div class="full-width-container">', unsafe_allow_html=True)
-
-# Create main layout
-title_col1, title_col2 = st.columns([8, 2], gap="small")
-with title_col1:
-    st.header("🎯 Trading Analysis Dashboard")
-with title_col2:
-    st.header("🤖 Agent Status")
-
-main_content_col, agent_status_col = st.columns([8, 2], gap="small")
+# Create main layout container with two columns
+main_content_col, agent_status_col = st.columns([7, 3])
 
 # Main content area
 with main_content_col:
+    st.header("🎯 Trading Analysis Dashboard")
+
     # Analysis parameters
     if COMPONENTS_AVAILABLE:
         analysis_params = render_analysis_parameters()
@@ -1658,9 +1785,154 @@ with main_content_col:
             st.session_state.analysis_running = False
             st.session_state.last_error = str(e)
             st.rerun()
+    
+    # Results section - moved inside main content column
+    if st.session_state.analysis_results and not st.session_state.analysis_running:
+        # Pre-generate export content
+        markdown_content = generate_markdown_report(st.session_state.analysis_results)
+        markdown_filename = f"trading_analysis_{st.session_state.analysis_results.get('symbol', 'report')}_{st.session_state.analysis_results.get('date', 'unknown')}.md"
 
-# Agent status sidebar - Create placeholders for dynamic updates
+        jsonl_content = generate_jsonl_log(
+            st.session_state.analysis_results,
+            st.session_state.progress_messages,
+            st.session_state.tool_calls,
+        )
+        jsonl_filename = f"trading_log_{st.session_state.analysis_results.get('symbol', 'log')}_{st.session_state.analysis_results.get('date', 'unknown')}.jsonl"
+
+        decision_summary = get_decision_summary(st.session_state.analysis_results)
+
+        # Header with evenly spaced export buttons
+        col1, col2, col3, col4 = st.columns([3, 1, 1, 1], gap="medium")
+
+        with col1:
+            st.markdown(
+                '<h1 style="font-size: 1.5rem; font-weight: 700; color: #22c55e; margin-top: 0; margin-bottom: 0; white-space: nowrap; line-height: 2.5rem;">📊 Analysis Results</h1>',
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                '<div style="display: flex; align-items: center; height: 2.5rem;">',
+                unsafe_allow_html=True,
+            )
+            st.download_button(
+                label="📄 Full Report",
+                data=markdown_content,
+                file_name=markdown_filename,
+                mime="text/markdown",
+                use_container_width=True,
+                type="secondary",
+                help="Download complete analysis in Markdown format",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with col3:
+            st.markdown(
+                '<div style="display: flex; align-items: center; height: 2.5rem;">',
+                unsafe_allow_html=True,
+            )
+            st.download_button(
+                label="📋 Execution Log",
+                data=jsonl_content,
+                file_name=jsonl_filename,
+                mime="application/jsonl",
+                use_container_width=True,
+                type="secondary",
+                help="Download detailed execution log in JSONL format",
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with col4:
+            st.markdown(
+                '<div style="display: flex; align-items: center; height: 2.5rem;">',
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                "🎯 Quick Summary",
+                use_container_width=True,
+                type="secondary",
+                help="Toggle quick decision summary display",
+                key="quick_summary_toggle"
+            ):
+                st.session_state.show_quick_summary = not st.session_state.get(
+                    "show_quick_summary", False
+                )
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Show summary only when explicitly requested (not by default)
+        if st.session_state.get("show_quick_summary", False):
+            st.markdown("**Decision Summary:**")
+            st.code(decision_summary, language=None)
+
+        if COMPONENTS_AVAILABLE:
+            render_analysis_report(
+                st.session_state.analysis_results, analysis_params.get("debug_mode", False)
+            )
+        else:
+            # Fallback results display
+            results = st.session_state.analysis_results
+            st.subheader(f"Results for {results['symbol']} - {results['date']}")
+
+            result_data = results.get("result", {})
+
+            if result_data.get("market_report"):
+                st.subheader("📈 Market Analysis")
+                st.markdown(result_data["market_report"])
+
+            if result_data.get("news_report"):
+                st.subheader("📰 News Analysis")
+                st.markdown(result_data["news_report"])
+
+            if result_data.get("fundamentals_report"):
+                st.subheader("💰 Fundamentals")
+                st.markdown(result_data["fundamentals_report"])
+
+            if result_data.get("trader_investment_plan"):
+                st.subheader("🎯 Investment Decision")
+                st.markdown(result_data["trader_investment_plan"])
+
+        # JavaScript to directly style export buttons
+        st.markdown(
+            """
+        <script>
+        function styleExportButtons() {
+            const buttons = document.querySelectorAll('button[kind="secondary"]');
+            buttons.forEach(btn => {
+                const text = btn.textContent || btn.innerText;
+                if (text.includes('📄')) {
+                    btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                    btn.style.color = 'white';
+                    btn.style.border = '1px solid #3b82f6';
+                } else if (text.includes('📋')) {
+                    btn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+                    btn.style.color = 'white';
+                    btn.style.border = '1px solid #8b5cf6';
+                } else if (text.includes('🎯')) {
+                    btn.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+                    btn.style.color = 'white';
+                    btn.style.border = '1px solid #06b6d4';
+                }
+            });
+        }
+
+        // Run immediately and on DOM changes
+        styleExportButtons();
+        setTimeout(styleExportButtons, 100);
+        setTimeout(styleExportButtons, 500);
+
+        // Watch for DOM changes
+        const observer = new MutationObserver(styleExportButtons);
+        observer.observe(document.body, { childList: true, subtree: true });
+        </script>
+        """,
+            unsafe_allow_html=True,
+        )
+
+# Agent status panel
 with agent_status_col:
+    st.markdown("### 🤖 Agent Status")
+    
     # Agent status cards
     teams = {
         "📈 Analyst Team": [
@@ -1695,146 +1967,11 @@ with agent_status_col:
                 status = st.session_state.agent_status[agent]
                 render_agent_button(placeholder, agent, status)
 
-# Results section
-if st.session_state.analysis_results and not st.session_state.analysis_running:
-    # Pre-generate export content
-    markdown_content = generate_markdown_report(st.session_state.analysis_results)
-    markdown_filename = f"trading_analysis_{st.session_state.analysis_results.get('symbol', 'report')}_{st.session_state.analysis_results.get('date', 'unknown')}.md"
-
-    jsonl_content = generate_jsonl_log(
-        st.session_state.analysis_results,
-        st.session_state.progress_messages,
-        st.session_state.tool_calls,
-    )
-    jsonl_filename = f"trading_log_{st.session_state.analysis_results.get('symbol', 'log')}_{st.session_state.analysis_results.get('date', 'unknown')}.jsonl"
-
-    decision_summary = get_decision_summary(st.session_state.analysis_results)
-
-    # Header with inline export buttons - single row layout with reduced button width
-    col1, col2, col3, col4, col5 = st.columns([2.5, 0.9, 0.9, 0.9, 1.8], gap="small")
-
-    with col1:
-        st.markdown(
-            '<h2 style="margin-top: 0; margin-bottom: 0; white-space: nowrap; line-height: 2.5rem;">📊 Analysis Results</h2>',
-            unsafe_allow_html=True,
-        )
-
-    with col2:
-        st.markdown(
-            '<div style="display: flex; align-items: center; height: 2.5rem;">',
-            unsafe_allow_html=True,
-        )
-        st.download_button(
-            label="📄 Full Report",
-            data=markdown_content,
-            file_name=markdown_filename,
-            mime="text/markdown",
-            use_container_width=True,
-            type="secondary",
-            help="Download complete analysis in Markdown format",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col3:
-        st.markdown(
-            '<div style="display: flex; align-items: center; height: 2.5rem;">',
-            unsafe_allow_html=True,
-        )
-        st.download_button(
-            label="📋 Execution Log",
-            data=jsonl_content,
-            file_name=jsonl_filename,
-            mime="application/jsonl",
-            use_container_width=True,
-            type="secondary",
-            help="Download detailed execution log in JSONL format",
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col4:
-        st.markdown(
-            '<div style="display: flex; align-items: center; height: 2.5rem;">',
-            unsafe_allow_html=True,
-        )
-        if st.button(
-            "🎯 Quick Summary",
-            use_container_width=True,
-            type="secondary",
-            help="Toggle quick decision summary display",
-        ):
-            st.session_state.show_quick_summary = not st.session_state.get(
-                "show_quick_summary", False
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # JavaScript to directly style export buttons
-    st.markdown(
-        """
-    <script>
-    function styleExportButtons() {
-        const buttons = document.querySelectorAll('button[kind="secondary"]');
-        buttons.forEach(btn => {
-            const text = btn.textContent || btn.innerText;
-            if (text.includes('📄')) {
-                btn.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
-                btn.style.color = 'white';
-                btn.style.border = '1px solid #3b82f6';
-            } else if (text.includes('📋')) {
-                btn.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
-                btn.style.color = 'white';
-                btn.style.border = '1px solid #8b5cf6';
-            } else if (text.includes('🎯')) {
-                btn.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
-                btn.style.color = 'white';
-                btn.style.border = '1px solid #06b6d4';
-            }
-        });
-    }
-
-    // Run immediately and on DOM changes
-    styleExportButtons();
-    setTimeout(styleExportButtons, 100);
-    setTimeout(styleExportButtons, 500);
-
-    // Watch for DOM changes
-    const observer = new MutationObserver(styleExportButtons);
-    observer.observe(document.body, { childList: true, subtree: true });
-    </script>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    # Show summary only when explicitly requested (not by default)
-    if st.session_state.get("show_summary", False):
-        st.markdown("**Decision Summary:**")
-        st.code(decision_summary, language=None)
-
-    if COMPONENTS_AVAILABLE:
-        render_analysis_report(
-            st.session_state.analysis_results, analysis_params.get("debug_mode", False)
-        )
-    else:
-        # Fallback results display
-        results = st.session_state.analysis_results
-        st.subheader(f"Results for {results['symbol']} - {results['date']}")
-
-        result_data = results.get("result", {})
-
-        if result_data.get("market_report"):
-            st.subheader("📈 Market Analysis")
-            st.markdown(result_data["market_report"])
-
-        if result_data.get("news_report"):
-            st.subheader("📰 News Analysis")
-            st.markdown(result_data["news_report"])
-
-        if result_data.get("fundamentals_report"):
-            st.subheader("💰 Fundamentals")
-            st.markdown(result_data["fundamentals_report"])
-
-        if result_data.get("trader_investment_plan"):
-            st.subheader("🎯 Investment Decision")
-            st.markdown(result_data["trader_investment_plan"])
+    # Current Report section (moved to bottom of side pane for better UX)
+    st.markdown("### 📊 Current Report")
+    report_container = st.empty()
+    # Store in session state for access from analysis function
+    st.session_state.report_container = report_container
 
 # Error display
 if st.session_state.get("last_error") and not st.session_state.analysis_running:
