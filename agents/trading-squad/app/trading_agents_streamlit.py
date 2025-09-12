@@ -340,9 +340,17 @@ def fallback_render_analysis_controls():
                     f"{timestamp} [DEBUG] Stop Analysis button clicked"
                 )
             st.rerun()
-        return False
-    else:
-        return st.button("🚀 Start Analysis", type="primary", use_container_width=True)
+
+    # Show Start button when not running
+    if not st.session_state.analysis_running:
+        started = st.button("🚀 Start Analysis", type="primary", use_container_width=True)
+        # Always show a persistent Live Analysis Feed (History) below controls
+        render_live_feed_history()
+        return started
+    # If running, we already returned above after handling Stop
+    # Keep feed visible even when running
+    render_live_feed_history()
+    return False
 
 
 def fallback_render_agent_card(placeholder, agent, status):
@@ -382,7 +390,18 @@ def get_agent_display_text(agent, status):
     if status == "in_progress":
         return f"🔄 {activity} is Working"
     elif status == "completed":
-        return f"✅ {agent} Done"
+        # If we have a recorded duration for research sub-agents, append it in brackets
+        duration_text = ""
+        try:
+            durations = st.session_state.get("agent_durations", {})
+            # Only show for research sub-agents
+            if agent in {"Bull Researcher", "Bear Researcher", "Research Manager"}:
+                dur = durations.get(agent)
+                if dur is not None:
+                    duration_text = f" [{dur:.1f}s]"
+        except Exception:
+            pass
+        return f"✅ {agent} Done{duration_text}"
     elif status == "error":
         return f"❌ {agent} Error"
     else:  # pending
@@ -438,6 +457,35 @@ def render_agent_button(placeholder, agent, status):
 def update_agent_status(agent: str, status: str):
     """Update agent status and refresh UI placeholder"""
     if agent in st.session_state.agent_status:
+        # --- Lightweight timing for research sub-agents ---
+        # Initialize timing dicts if needed
+        if "agent_start_times" not in st.session_state:
+            st.session_state.agent_start_times = {}
+        if "agent_durations" not in st.session_state:
+            st.session_state.agent_durations = {}
+
+        monitored = {"Bull Researcher", "Bear Researcher", "Research Manager"}
+        # On start: record start time
+        if status == "in_progress" and agent in monitored:
+            # Only set start time if not already set to avoid overwriting
+            if st.session_state.agent_start_times.get(agent) is None:
+                st.session_state.agent_start_times[agent] = time.time()
+        # On complete: compute duration if we have a start time
+        if status == "completed" and agent in monitored:
+            t0 = st.session_state.agent_start_times.get(agent)
+            if t0:
+                elapsed = max(0.0, time.time() - t0)
+                st.session_state.agent_durations[agent] = elapsed
+                # Also push a concise timing line into the live feed
+                try:
+                    ts = datetime.now().strftime("%H:%M:%S")
+                    st.session_state.progress_messages.appendleft(
+                        f"{ts} [Timing] {agent} turn completed in {elapsed:.1f}s"
+                    )
+                except Exception:
+                    pass
+
+        # Update status value
         st.session_state.agent_status[agent] = status
         # Update the placeholder if it exists
         if (
@@ -503,6 +551,21 @@ def render_progress_header(header_placeholder):
         "</div>"
     )
     header_placeholder.markdown(html, unsafe_allow_html=True)
+
+
+def render_live_feed_history():
+    """Render a persistent, collapsible Live Analysis Feed (History)."""
+    try:
+        with st.expander("💬 Live Analysis Feed (History)", expanded=False):
+            # Render up to the last 400 messages in a scrollable div
+            history_msgs = list(st.session_state.get("progress_messages", []))
+            history_html = "<div style='max-height: 360px; overflow-y: auto; font-size: 0.9rem;'>"
+            for msg in history_msgs[:400]:
+                history_html += f"<div>- {msg}</div>"
+            history_html += "</div>"
+            st.markdown(history_html, unsafe_allow_html=True)
+    except Exception:
+        pass
 
 
 # --- Event-driven progress tracking helpers ---
@@ -989,7 +1052,18 @@ def run_real_analysis(
     else:
         research_depth = depth_map.get(depth_choice, "balanced")
     config["research_depth"] = research_depth
-    config["online_tools"] = True
+    # Honor Online Tools toggle from Analysis Parameters
+    config["online_tools"] = bool(analysis_params.get("online_tools", True))
+    # Wire debate/risk rounds from Analysis Parameters (used by ConditionalLogic)
+    try:
+        config["max_debate_rounds"] = int(analysis_params.get("max_debate_rounds", 1))
+    except Exception:
+        config["max_debate_rounds"] = 1
+    try:
+        # Note: UI uses 'max_risk_rounds'; backend expects 'max_risk_discuss_rounds'
+        config["max_risk_discuss_rounds"] = int(analysis_params.get("max_risk_rounds", 1))
+    except Exception:
+        config["max_risk_discuss_rounds"] = 1
 
     # Fetch a fresh company profile for this run only (no session coupling)
     local_profile = fetch_company_profile(stock_symbol)
@@ -1160,10 +1234,10 @@ def run_real_analysis(
                         content = str(last_message)
                         msg_type = "System"
 
-                    # Add message to buffer
+                    # Add full message to buffer (no truncation; history is scrollable)
                     timestamp = datetime.now().strftime("%H:%M:%S")
                     st.session_state.progress_messages.appendleft(
-                        f"{timestamp} [{msg_type}] {content[:100]}..."
+                        f"{timestamp} [{msg_type}] {content}"
                     )
 
                     # Debug-only: do not mirror streamed messages into Tool Calls (keeps panel focused)
@@ -1173,11 +1247,11 @@ def run_real_analysis(
                         for tool_call in last_message.tool_calls:
                             if isinstance(tool_call, dict):
                                 st.session_state.tool_calls.appendleft(
-                                    f"{timestamp} [Tool] {tool_call['name']}: {str(tool_call['args'])[:50]}..."
+                                    f"{timestamp} [Tool] {tool_call['name']}: {str(tool_call['args'])}"
                                 )
                             else:
                                 st.session_state.tool_calls.appendleft(
-                                    f"{timestamp} [Tool] {tool_call.name}: {str(tool_call.args)[:50]}..."
+                                    f"{timestamp} [Tool] {tool_call.name}: {str(tool_call.args)}"
                                 )
                         # Refresh sidebar panel if debug mode is on
                         if analysis_params.get("debug_mode", False):
@@ -1301,8 +1375,10 @@ def run_real_analysis(
                         )
                         st.session_state.mismatch_warned_sections.add("fundamentals_report")
                     update_agent_status("Fundamentals Analyst", "completed")
-                    # Set all research team members to in_progress
-                    update_research_team_status("in_progress")
+                    # Start Research phase: only Bull Researcher should be in progress first
+                    update_agent_status("Bull Researcher", "in_progress")
+                    update_agent_status("Bear Researcher", "pending")
+                    update_agent_status("Research Manager", "pending")
                     # Event milestone: fundamentals report ready
                     _mark_progress("fundamentals_report")
 
@@ -1357,9 +1433,38 @@ def run_real_analysis(
             if "investment_debate_state" in chunk and chunk["investment_debate_state"]:
                 debate_state = chunk["investment_debate_state"]
 
-                # Update Bull Researcher status and report
+                # Seed timing for current speaker if available
+                try:
+                    current = (debate_state.get("current_response") or "").lower()
+                except Exception:
+                    current = ""
+                if current:
+                    if "bull" in current:
+                        if "agent_start_times" not in st.session_state:
+                            st.session_state.agent_start_times = {}
+                        if st.session_state.agent_start_times.get("Bull Researcher") is None:
+                            st.session_state.agent_start_times["Bull Researcher"] = time.time()
+                    elif "bear" in current:
+                        if "agent_start_times" not in st.session_state:
+                            st.session_state.agent_start_times = {}
+                        if st.session_state.agent_start_times.get("Bear Researcher") is None:
+                            st.session_state.agent_start_times["Bear Researcher"] = time.time()
+
+                # Initialize debate history trackers
+                if "debate_seen" not in st.session_state:
+                    st.session_state.debate_seen = {"bull": 0, "bear": 0, "judge": ""}
+
+                # Update Bull Researcher status and report (per-agent status)
                 if "bull_history" in debate_state and debate_state["bull_history"]:
-                    update_research_team_status("in_progress")
+                    # Only handle completion if bull history grew
+                    bull_lines = [l for l in debate_state["bull_history"].split("\n") if l.strip()]
+                    if len(bull_lines) > st.session_state.debate_seen.get("bull", 0):
+                        # Bull's turn content has arrived => Bull completes now
+                        update_agent_status("Bull Researcher", "completed")
+                        # Start Bear's timing/turn
+                        update_agent_status("Bear Researcher", "in_progress")
+                        st.session_state.debate_seen["bull"] = len(bull_lines)
+                    update_agent_status("Research Manager", "pending")
                     bull_responses = debate_state["bull_history"].split("\n")
                     latest_bull = bull_responses[-1] if bull_responses else ""
                     if latest_bull:
@@ -1372,15 +1477,51 @@ def run_real_analysis(
                     st.session_state.progress_tracker["completed"] += 1
                     st.session_state.progress_tracker["total"] += 1
 
+                # Update Bear Researcher status and report (per-agent status)
+                if "bear_history" in debate_state and debate_state["bear_history"]:
+                    # Only handle completion if bear history grew
+                    bear_lines = [l for l in debate_state["bear_history"].split("\n") if l.strip()]
+                    if len(bear_lines) > st.session_state.debate_seen.get("bear", 0):
+                        # Bear's turn content has arrived => Bear completes now
+                        update_agent_status("Bear Researcher", "completed")
+                        st.session_state.debate_seen["bear"] = len(bear_lines)
+                    # Begin Research Manager's turn so we can measure timing before decision arrives
+                    update_agent_status("Research Manager", "in_progress")
+                    bear_responses = debate_state["bear_history"].split("\n")
+                    latest_bear = bear_responses[-1] if bear_responses else ""
+                    if latest_bear:
+                        # Append or replace investment plan preview with Bear section
+                        st.session_state.report_sections["investment_plan"] = (
+                            f"### Bear Researcher Analysis\n{latest_bear}"
+                        )
+                        # Event milestone: research bear contribution
+                        _mark_progress("research_bear")
+
+                # Research Manager (judge) takes over after debate rounds
+                if (
+                    "judge_decision" in debate_state
+                    and debate_state["judge_decision"]
+                ):
+                    # Judge has produced a decision: mark debaters completed,
+                    # mark Research Manager completed, and move Trader to in_progress
+                    st.session_state.report_sections["investment_plan"] = (
+                        f"### Research Manager Decision\n{debate_state['judge_decision']}"
+                    )
+                    update_agent_status("Bull Researcher", "completed")
+                    update_agent_status("Bear Researcher", "completed")
+                    update_agent_status("Research Manager", "completed")
+                    update_agent_status("Trader", "in_progress")
+                    _mark_progress("research_manager_decision")
+
                 # ... (rest of the code remains the same)
 
                 if "trader_investment_plan" in chunk and chunk["trader_investment_plan"]:
+                    # Trader has produced a plan: mark Trader completed and advance to Risk phase
                     st.session_state.report_sections["trader_investment_plan"] = chunk[
                         "trader_investment_plan"
                     ]
-                    # Set first risk analyst to in_progress
+                    update_agent_status("Trader", "completed")
                     update_agent_status("Risky Analyst", "in_progress")
-                    # Event milestone: trader plan ready
                     _mark_progress("trader_plan")
 
                 # Risk Management Team - Handle Risk Debate State (proper scope)
@@ -1474,6 +1615,9 @@ def run_real_analysis(
                 st.session_state.report_container.markdown(
                     build_partial_report_md(st.session_state.report_sections)
                 )
+
+            # Render persistent Live Analysis Feed (History) during streaming
+            render_live_feed_history()
 
             # Update progress (reflect in-progress work for better UX)
             completed_count = sum(
